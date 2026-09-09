@@ -1,0 +1,201 @@
+:root {
+    --sapphire-50: #E5F0FF;
+    --sapphire-100: #CCE0FF;
+    --sapphire-300: #66A3FF;
+    --sapphire-500: #0066FF;
+    --sapphire-600: #0052CC;
+    --sapphire-800: #002966;
+    --sapphire-900: #001433;
+    --sapphire-950: #000E24;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--sapphire-950);
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Fullscreen Background & Cinematic Dark Overlay */
+.hero-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2000&auto=format&fit=crop') center/cover no-repeat;
+    z-index: -2;
+    filter: brightness(0.7) contrast(1.1);
+}
+
+.hero-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(0, 14, 36, 0.92) 0%, rgba(0, 20, 51, 0.75) 50%, rgba(0, 41, 102, 0.85) 100%);
+    z-index: -1;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-size: 1.4rem;
+    letter-spacing: 1.5px;
+}
+
+.text-primary {
+    color: var(--sapphire-500) !important;
+}
+
+/* Hero Left Text Section */
+.hero-content {
+    z-index: 1;
+}
+
+.fw-extrabold {
+    font-weight: 800;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, var(--sapphire-300) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.badge-pill {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 30px;
+    background: rgba(0, 102, 255, 0.15);
+    border: 1px solid rgba(102, 163, 255, 0.3);
+    color: var(--sapphire-300);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Glassmorphism Card Overlay */
+.glass-card {
+    background: rgba(0, 20, 51, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 40px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+}
+
+.form-title {
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.fs-7 {
+    font-size: 0.85rem;
+}
+
+/* Modern Input Controls */
+.form-label {
+    color: var(--sapphire-100);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.custom-input-group {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sapphire-300);
+    z-index: 5;
+}
+
+.custom-input-group .form-control {
+    padding-left: 45px;
+}
+
+.form-control {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: #ffffff;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: all 0.25s ease;
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--sapphire-500);
+    box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.25);
+    color: #ffffff;
+}
+
+/* Custom Sapphire Button */
+.btn-sapphire {
+    background: linear-gradient(135deg, var(--sapphire-500) 0%, var(--sapphire-600) 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 20px rgba(0, 102, 255, 0.35);
+    transition: all 0.3s ease;
+}
+
+.btn-sapphire:hover {
+    background: linear-gradient(135deg, var(--sapphire-600) 0%, var(--sapphire-800) 100%);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(0, 82, 204, 0.45);
+}
+
+.toggle-link {
+    color: var(--sapphire-300);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.toggle-link:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+/* Alert Boxes */
+.alert {
+    border-radius: 12px;
+    border: none;
+    font-size: 0.88rem;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.25);
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    color: #ff848e;
+}
+
+.alert-success {
+    background: rgba(25, 135, 84, 0.25);
+    border: 1px solid rgba(25, 135, 84, 0.4);
+    color: #75b798;
+}
+
+.hidden {
+    display: none !important;
+}
