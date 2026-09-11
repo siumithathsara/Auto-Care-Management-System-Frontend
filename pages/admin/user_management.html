@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoCare - User Management Console</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../../css/admin/user.css">
+</head>
+<body class="um-app">
+
+<!-- Top Navigation Console -->
+<header class="um-navbar">
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <div class="app-brand-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold mb-0 text-white">AutoCare Command</h5>
+                <span class="fs-8 text-indigo">USER MANAGEMENT SYSTEM</span>
+            </div>
+        </div>
+
+        <!-- Profile Widget -->
+        <div class="profile-widget" onclick="openLoggedUserProfile()" title="Click to view logged user profile">
+            <div class="profile-avatar">
+                <i class="fa-solid fa-user-gear"></i>
+            </div>
+            <div class="d-none d-md-block">
+                <div class="fw-bold fs-7 text-white" id="navUsername">System Admin</div>
+                <div class="fs-8 text-indigo fw-semibold" id="navUserRole">ADMINISTRATOR</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Container -->
+<div class="container-fluid px-4 py-4">
+
+    <!-- Header Controls Row -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-6">
+            <h3 class="fw-extrabold text-white mb-1">User Directory</h3>
+            <p class="text-secondary mb-0 fs-7">Manage role permissions, add staff members, and track user status.</p>
+        </div>
+        <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
+            <button class="btn btn-outline-indigo" data-bs-toggle="modal" data-bs-target="#userFormModal" onclick="openCreateUserModal('STAFF')">
+                <i class="fa-solid fa-user-plus me-2"></i>+ Add Staff
+            </button>
+            <button class="btn btn-indigo" data-bs-toggle="modal" data-bs-target="#userFormModal" onclick="openCreateUserModal('ADMIN')">
+                <i class="fa-solid fa-user-shield me-2"></i>+ Add Admin
+            </button>
+        </div>
+    </div>
+
+    <!-- Metric KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="kpi-card">
+                <div class="kpi-body">
+                    <span class="kpi-title">TOTAL REGISTERED</span>
+                    <h2 class="kpi-value" id="statTotalUsers">0</h2>
+                </div>
+                <div class="kpi-badge kpi-indigo">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="kpi-card">
+                <div class="kpi-body">
+                    <span class="kpi-title">ACTIVE ACCOUNTS</span>
+                    <h2 class="kpi-value text-emerald" id="statActiveUsers">0</h2>
+                </div>
+                <div class="kpi-badge kpi-emerald">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-12 col-lg-4">
+            <div class="kpi-card">
+                <div class="kpi-body">
+                    <span class="kpi-title">SUPPORTED ROLES</span>
+                    <h6 class="text-white mt-2 mb-0 fw-bold">ADMIN / MANAGER / ADVISOR / SUPERVISOR</h6>
+                </div>
+                <div class="kpi-badge kpi-purple">
+                    <i class="fa-solid fa-id-badge"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Panel -->
+    <div class="panel-card mb-4 p-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-12 col-md-8">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by username..." oninput="handleSearch()">
+                </div>
+            </div>
+            <div class="col-12 col-md-4 text-md-end">
+                <button class="btn btn-dark-panel w-100 w-md-auto" onclick="loadAllActiveUsers()">
+                    <i class="fa-solid fa-rotate me-2"></i>Refresh Console
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Table Section -->
+    <div class="panel-card overflow-hidden mb-4">
+        <div class="table-responsive">
+            <table class="table table-dark-custom align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>User Code</th>
+                    <th>User Details</th>
+                    <th>Contact Information</th>
+                    <th>NIC / Passport</th>
+                    <th>Assigned Role</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="userTableBody">
+                <!-- Dynamic JSON Data -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- 1. ADD / EDIT USER MODAL -->
+<div class="modal fade" id="userFormModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="fw-bold mb-0 text-white" id="userModalTitle">Add User</h5>
+                    <span class="fs-8 text-secondary">Fill in the user details below</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="userModalForm">
+                    <input type="hidden" id="editUserCode">
+                    <input type="hidden" id="formActionType" value="CREATE">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="custom-label">Username</label>
+                            <input type="text" id="formUsername" class="form-control custom-input" placeholder="e.g. jondoe" required minlength="3" maxlength="50">
+                        </div>
+                        <div class="col-md-6" id="passwordContainer">
+                            <label class="custom-label">Password</label>
+                            <input type="password" id="formPassword" class="form-control custom-input" placeholder="Min 6 characters" minlength="6">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Email Address</label>
+                            <input type="email" id="formEmail" class="form-control custom-input" placeholder="user@autocare.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Phone Number</label>
+                            <input type="tel" id="formPhone" class="form-control custom-input" placeholder="0771234567" pattern="[0-9]{10}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">NIC / Passport</label>
+                            <input type="text" id="formNic" class="form-control custom-input" placeholder="NIC or Passport No" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">System Role</label>
+                            <select id="formRole" class="form-select custom-input" required>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="MANAGER">MANAGER</option>
+                                <option value="ADVISOR">ADVISOR</option>
+                                <option value="SUPERVISOR">SUPERVISOR</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="custom-label">Address</label>
+                            <input type="text" id="formAddress" class="form-control custom-input" placeholder="Full residential address" minlength="5" maxlength="255" required>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <button type="button" class="btn btn-dark-panel me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-indigo" id="saveUserBtn">Save Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. LOGGED-IN USER PROFILE POPUP MODAL -->
+<div class="modal fade" id="userProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal text-center p-3">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="large-avatar mx-auto mb-3">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h4 class="fw-bold text-white mb-1" id="profileUsername">System Admin</h4>
+                <span class="role-badge" id="profileRole">ADMIN</span>
+
+                <div class="detail-box mt-4 text-start">
+                    <div class="detail-row">
+                        <span class="detail-key">User Code</span>
+                        <span class="detail-val text-indigo" id="profileCode">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Email</span>
+                        <span class="detail-val" id="profileEmail">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Phone</span>
+                        <span class="detail-val" id="profilePhone">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">NIC / Passport</span>
+                        <span class="detail-val" id="profileNic">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-key">Address</span>
+                        <span class="detail-val" id="profileAddress">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script src="../../js/admin/user.js"></script>
+</body>
+</html>
