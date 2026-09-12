@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - AutoCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/appointment.css">
+</head>
+<body class="vc-app">
+
+<div class="container-fluid px-4 py-4">
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-8">
+            <h3 class="fw-bold text-white mb-1">Book Vehicle Service</h3>
+            <p class="text-muted mb-0 fs-7">Select vehicle, scheduled slot, and click cards to pick required services.</p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <a href="my-appointments.html" class="btn btn-outline-custom">
+                <i class="fa-solid fa-clock-rotate-left me-2"></i>My Appointments
+            </a>
+        </div>
+    </div>
+
+    <div class="panel-card">
+        <form id="appointmentForm" onsubmit="handleAppointmentSubmit(event)">
+            <input type="hidden" id="appUserCode">
+
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-6">
+                    <label class="custom-label">Select Vehicle *</label>
+                    <select class="form-select custom-input" id="appVehicleSelect" required>
+                        <option value="" selected disabled>Loading vehicles...</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="custom-label">Appointment Date *</label>
+                    <input type="date" class="form-control custom-input" id="appDate" required>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="custom-label">Appointment Time *</label>
+                    <input type="time" class="form-control custom-input" id="appTime" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="custom-label mb-3 d-block">Select Services (Click Card to Pick) *</label>
+                <div class="row g-3" id="servicesCardContainer" style="max-height: 420px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="panel-card mb-4" style="background: rgba(255, 255, 255, 0.02);">
+                <div class="row align-items-center g-3">
+                    <div class="col-6 col-md-3">
+                        <span class="kpi-title">ESTIMATED TIME</span>
+                        <h5 id="totalEstTime" class="text-white fw-bold mt-1 mb-0">0 mins</h5>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <span class="kpi-title">TOTAL ESTIMATED FEE</span>
+                        <h4 id="totalEstCost" class="fw-extrabold mt-1 mb-0" style="color: var(--emerald);">LKR 0.00</h4>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="custom-label">Special Notes</label>
+                        <input type="text" class="form-control custom-input" id="appSpecialNotes" placeholder="Additional instructions or issues...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                    <i class="fa-solid fa-calendar-check me-2"></i>Confirm Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/customer/appointment-booking.js"></script>
+</body>
+</html>

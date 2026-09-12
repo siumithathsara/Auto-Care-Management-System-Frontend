@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Appointments - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/appointment.css">
+</head>
+<body class="vc-app">
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-6">
+            <h3 class="fw-bold text-white mb-1">Appointment Management</h3>
+            <p class="text-muted mb-0 fs-7">Manage customer bookings, schedule updates, and status transitions.</p>
+        </div>
+        <div class="col-12 col-md-6 text-md-end d-flex gap-2 justify-content-md-end">
+            <button class="btn btn-primary-custom" onclick="openCreateModal()">
+                <i class="fa-solid fa-plus me-2"></i>New Appointment
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats & Filters Bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="kpi-card">
+                <div>
+                    <div class="kpi-title">TOTAL APPOINTMENTS</div>
+                    <div class="kpi-value" id="adminTotalCount">0</div>
+                </div>
+                <div class="kpi-icon">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-8">
+            <div class="panel-card h-100 d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
+                <!-- Search Box -->
+                <div class="search-box" style="max-width: 280px;">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="adminSearchInput" class="form-control custom-input ps-5" placeholder="Search Code, Customer, Plate..." onkeyup="filterAppointmentsLocally()">
+                </div>
+
+                <!-- Status Filter Badges (Pill style with Spacing) -->
+                <div class="d-flex align-items-center gap-2 flex-wrap" id="statusFilterContainer">
+                    <button class="btn btn-outline-custom active-filter px-3 py-1 fs-8" onclick="filterByStatus('ALL', this)">ALL</button>
+                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-warning" onclick="filterByStatus('PENDING', this)">PENDING</button>
+                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-info" onclick="filterByStatus('CONFIRMED', this)">CONFIRMED</button>
+                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-success" onclick="filterByStatus('COMPLETED', this)">COMPLETED</button>
+                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-danger" onclick="filterByStatus('CANCELLED', this)">CANCELLED</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Panel -->
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-custom mb-0 align-middle">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Customer</th>
+                    <th>Vehicle</th>
+                    <th>Date & Time</th>
+                    <th>Services</th>
+                    <th>Est. Cost</th>
+                    <th>Status</th>
+                    <th class="text-end px-4">Actions / Change Status</th>
+                </tr>
+                </thead>
+                <tbody id="adminAppointmentsBody">
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5 fs-7">
+                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Loading appointments...
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Create / Edit Modal -->
+<div class="modal fade" id="adminAppointmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-panel); border: 1px solid var(--border-color); color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                <h5 class="modal-title fw-bold" id="modalTitle"><i class="fa-solid fa-calendar-plus me-2 text-indigo"></i>Create Appointment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <form id="adminAppForm">
+                    <input type="hidden" id="editAppointmentCode">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="custom-label">Customer Code *</label>
+                            <input type="text" class="form-control custom-input" id="adminUserCode" placeholder="e.g. CUST001" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Vehicle Code *</label>
+                            <input type="text" class="form-control custom-input" id="adminVehicleCode" placeholder="e.g. VEH001" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Appointment Date *</label>
+                            <input type="date" class="form-control custom-input" id="adminDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Appointment Time *</label>
+                            <input type="time" class="form-control custom-input" id="adminTime" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="custom-label">Service Codes (Comma Separated) *</label>
+                            <input type="text" class="form-control custom-input" id="adminServiceCodes" placeholder="SRV001, SRV002" required>
+                            <div class="text-muted fs-8 mt-1">Separate multiple codes using commas.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="custom-label">Special Notes</label>
+                            <input type="text" class="form-control custom-input" id="adminSpecialNotes" placeholder="Additional details or instructions">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-custom px-4" onclick="saveAppointmentFromAdmin()">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Save Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/admin/appointment-manage.js"></script>
+</body>
+</html>
