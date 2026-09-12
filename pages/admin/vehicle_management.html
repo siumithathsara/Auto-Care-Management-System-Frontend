@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Fleet - AutoCare Command</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/vehicle.css">
+</head>
+<body class="vc-app">
+
+<!--<header class="vc-navbar">-->
+<!--    <div class="container-fluid px-4 d-flex justify-content-between align-items-center">-->
+<!--        <div class="d-flex align-items-center gap-3">-->
+<!--            <h5 class="fw-bold mb-0 text-white">AutoCare Command</h5>-->
+<!--            <span class="fs-8 text-muted d-none d-md-inline">| VEHICLE MANAGEMENT</span>-->
+<!--        </div>-->
+<!--        <div class="text-white fw-bold"><i class="fa-solid fa-user-shield me-2"></i><span id="loggedUserRole">ADMIN</span></div>-->
+<!--    </div>-->
+<!--</header>-->
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header & Action -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-6">
+            <h3 class="fw-bold text-white mb-1">Vehicle Directory</h3>
+            <p class="text-muted mb-0 fs-7">Manage customer vehicles, update details, and track fleet.</p>
+        </div>
+        <div class="col-12 col-md-6 text-md-end">
+            <button class="btn btn-primary-custom" onclick="openVehicleModal('ADD')">
+                <i class="fa-solid fa-car-side me-2"></i> Register Vehicle
+            </button>
+        </div>
+    </div>
+
+    <!-- KPIs Card -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="kpi-card">
+                <div>
+                    <span class="kpi-title">TOTAL REGISTERED VEHICLES</span>
+                    <h2 class="kpi-value" id="statTotalVehicles">0</h2>
+                </div>
+                <div class="kpi-icon"><i class="fa-solid fa-car"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Panel -->
+    <div class="panel-card mb-4 p-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-12 col-md-8">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchLicensePlate" class="form-control search-input-white" placeholder="Search by License Plate (e.g. CBA-1234)..." oninput="filterVehicles()">
+                </div>
+            </div>
+            <div class="col-12 col-md-4 text-md-end">
+                <button class="btn btn-dark-panel w-100 w-md-auto" onclick="loadAllVehicles()">
+                    <i class="fa-solid fa-rotate me-2"></i>Refresh Console
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="panel-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle">
+                <thead>
+                <tr>
+                    <th>License Plate</th>
+                    <th>Vehicle Info</th>
+                    <th>Owner (Customer)</th>
+                    <th>Transmission & Fuel</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="vehicleTableBody">
+                <!-- Data loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Modal -->
+<div class="modal fade" id="vehicleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalTitle">Register Vehicle</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="vehicleForm">
+                    <input type="hidden" id="editVehicleCode">
+                    <input type="hidden" id="formAction">
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="custom-label">License Plate *</label>
+                            <input type="text" id="vLicense" class="form-control custom-input" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Customer User Code *</label>
+                            <input type="text" id="vCustomer" class="form-control custom-input" required placeholder="CUS-XXXX">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Manufacture Year</label>
+                            <input type="number" id="vYear" class="form-control custom-input" min="1900" max="2026">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Brand *</label>
+                            <input type="text" id="vBrand" class="form-control custom-input" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Model *</label>
+                            <input type="text" id="vModel" class="form-control custom-input" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Fuel Type *</label>
+                            <select id="vFuel" class="form-select custom-input" required>
+                                <option value="PETROL">Petrol</option>
+                                <option value="DIESEL">Diesel</option>
+                                <option value="HYBRID">Hybrid</option>
+                                <option value="ELECTRIC">Electric</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Transmission *</label>
+                            <select id="vTrans" class="form-select custom-input" required>
+                                <option value="AUTO">Auto</option>
+                                <option value="MANUAL">Manual</option>
+                                <option value="CVT">CVT</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Color</label>
+                            <input type="text" id="vColor" class="form-control custom-input">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Chassis No</label>
+                            <input type="text" id="vChassis" class="form-control custom-input">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Engine No</label>
+                            <input type="text" id="vEngine" class="form-control custom-input">
+                        </div>
+                    </div>
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-primary-custom">Save Vehicle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/admin/vehicle.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Garage - AutoCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/vehicle.css">
+    <style>
+        .vehicle-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; transition: transform 0.2s; }
+        .vehicle-card:hover { transform: translateY(-5px); border-color: var(--primary-color); }
+        .v-plate { font-size: 1.4rem; font-weight: 800; color: var(--primary-color); }
+    </style>
+</head>
+<body class="vc-app">
+
+<div class="container px-4 py-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h3 class="fw-bold text-white mb-1">My Garage</h3>
+            <p class="text-muted mb-0 fs-7">Manage your registered vehicles.</p>
+        </div>
+        <button class="btn btn-primary-custom" onclick="openVehicleModal('ADD')">
+            <i class="fa-solid fa-plus me-2"></i> Add Vehicle
+        </button>
+    </div>
+
+    <!-- Vehicle Grid -->
+    <div class="row g-4" id="customerVehicleGrid">
+        <!-- Loaded via JS -->
+    </div>
+</div>
+
+<!-- Add/Edit Vehicle Modal (Similar Form Structure, but no Customer Code input needed as it's auto-filled) -->
+<div class="modal fade" id="vehicleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalTitle">Vehicle Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="vehicleForm">
+                    <input type="hidden" id="editVehicleCode">
+                    <input type="hidden" id="formAction">
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="custom-label">License Plate *</label>
+                            <input type="text" id="vLicense" class="form-control custom-input" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="custom-label">Brand *</label>
+                            <input type="text" id="vBrand" class="form-control custom-input" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="custom-label">Model *</label>
+                            <input type="text" id="vModel" class="form-control custom-input" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="custom-label">Fuel Type *</label>
+                            <select id="vFuel" class="form-select custom-input" required>
+                                <option value="PETROL">Petrol</option>
+                                <option value="DIESEL">Diesel</option>
+                                <option value="HYBRID">Hybrid</option>
+                                <option value="ELECTRIC">Electric</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="custom-label">Transmission *</label>
+                            <select id="vTrans" class="form-select custom-input" required>
+                                <option value="AUTO">Auto</option>
+                                <option value="MANUAL">Manual</option>
+                                <option value="CVT">CVT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-primary-custom w-100">Save Vehicle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/customer/vehicle.js"></script>
+</body>
+</html>

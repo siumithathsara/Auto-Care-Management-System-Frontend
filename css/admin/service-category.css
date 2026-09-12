@@ -1,0 +1,19 @@
+.text-indigo {
+    color: var(--secondary-color) !important;
+}
+
+/* Custom Status Badges */
+.bg-success-subtle {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.bg-danger-subtle {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+/* Responsive Overrides for Smaller Screens */
+@media (max-width: 768px) {
+    .cat-img-wrapper {
+        height: 150px;
+    }
+}
