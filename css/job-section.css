@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* Dynamic Theme Tokens */
+:root {
+    --bg-app: #080A0F;
+    --bg-panel: #11151D;
+    --border-color: rgba(255, 255, 255, 0.08);
+
+    --primary-color: #A78BFA;
+    --primary-hover: #8B5CF6;
+    --primary-glow: rgba(167, 139, 250, 0.15);
+
+    --text-muted: #A0AEC0;
+}
+
+body.vc-app {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-app);
+    color: #F8FAFC;
+    min-height: 100vh;
+}
+
+/* Common Panels */
+.panel-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 24px;
+}
+
+/* Custom Search Input */
+.custom-search-box {
+    position: relative !important;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.custom-search-box .search-icon {
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #64748B !important;
+    font-size: 0.95rem !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+}
+
+.custom-search-input {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0F172A !important;
+    border-radius: 8px !important;
+    padding: 10px 16px 10px 42px !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    height: 42px !important;
+    width: 100%;
+}
+
+.custom-search-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+    outline: none;
+}
+
+.btn-refresh-console {
+    background: #1E293B !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    color: #F8FAFC !important;
+    border-radius: 8px !important;
+    height: 42px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+}
+
+.btn-refresh-console i { color: var(--primary-color) !important; }
+
+/* Status Badges */
+.badge-status-PENDING { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-status-IN_PROGRESS { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge-status-COMPLETED { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+/* Timeline & Cards */
+.timeline-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    transition: transform 0.2s;
+}
+
+.timeline-card:hover { transform: translateY(-2px); }
+
+.bg-primary-gradient {
+    background: linear-gradient(90deg, #818CF8, #A78BFA) !important;
+}

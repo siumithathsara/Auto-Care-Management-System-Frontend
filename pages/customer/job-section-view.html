@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Vehicle Progress - AutoCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/job-section.css">
+</head>
+<body class="vc-app">
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-12 text-center text-md-start">
+            <h3 class="fw-bold text-white mb-1">Track Service Status</h3>
+            <p class="text-muted mb-0 fs-7">Enter your Job Card Code to view real-time vehicle repair progress.</p>
+        </div>
+    </div>
+
+    <!-- Search Box Panel -->
+    <div class="panel-card mb-4 p-4">
+        <div class="row g-3 align-items-center justify-content-center">
+            <div class="col-12 col-md-8">
+                <div class="custom-search-box">
+                    <i class="fa-solid fa-hashtag search-icon"></i>
+                    <input type="text" id="custJobCardInput" class="form-control custom-search-input" placeholder="Enter Job Card Code (e.g. JC-1002)...">
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <button class="btn btn-primary-custom w-100 py-2" onclick="trackJobCardProgress()">
+                    <i class="fa-solid fa-magnifying-glass me-2"></i>Track Progress
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Progress Timeline Area -->
+    <div id="customerTrackingResult" class="d-none">
+        <!-- Progress Bar Summary Card -->
+        <div class="panel-card mb-4 p-4">
+            <div class="row align-items-center g-3">
+                <div class="col-12 col-md-6">
+                    <span class="kpi-title">VEHICLE PLATE</span>
+                    <h4 id="custPlateNo" class="text-white fw-bold mt-1 mb-0">-</h4>
+                </div>
+                <div class="col-12 col-md-6 text-md-end">
+                    <span class="kpi-title">OVERALL COMPLETION</span>
+                    <h4 id="custPercentText" class="fw-bold mt-1 mb-0 text-primary-color">0%</h4>
+                </div>
+            </div>
+            <div class="progress custom-progress mt-3" style="height: 10px;">
+                <div id="custProgressBar" class="progress-bar bg-primary-gradient" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Sections Timeline Cards Container -->
+        <div class="row g-3" id="customerTimelineContainer"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/customer/job-section-view.js"></script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spare Parts Inventory - AutoCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/admin/spare-part-manage.css">
+</head>
+<body class="vc-app">
+
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-8">
+            <h3 class="fw-bold text-white mb-1">Spare Parts Inventory</h3>
+            <p class="text-muted mb-0 fs-7">Manage automotive parts, track real-time stock levels, and monitor reorder alerts.</p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end admin-only-action">
+            <button class="btn btn-primary-custom" onclick="openSaveSparePartModal()">
+                <i class="fa-solid fa-plus me-2"></i>Add New Part
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Alert Cards (Low Stock Focus) -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="kpi-title">TOTAL ITEMS</span>
+                        <h3 class="kpi-value mt-2 text-white" id="totalPartsCount">0</h3>
+                    </div>
+                    <div class="kpi-icon-box bg-primary-glow">
+                        <i class="fa-solid fa-boxes-stacked text-primary-color"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="kpi-card kpi-warning-card clickable-kpi" onclick="loadLowStockSpareParts()">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="kpi-title text-warning">LOW STOCK ALERTS</span>
+                        <h3 class="kpi-value mt-2 text-warning" id="lowStockCount">0</h3>
+                        <small class="text-muted fs-9 d-block mt-1"><i class="fa-solid fa-envelope me-1"></i>Email trigger active</small>
+                    </div>
+                    <div class="kpi-icon-box bg-warning-glow">
+                        <i class="fa-solid fa-triangle-exclamation text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Panel (Search & Filter Tabs) -->
+    <div class="row g-3 align-items-center mb-3">
+        <div class="col-12 col-md-8">
+            <!-- Search Input with Icon Inside -->
+            <div class="custom-search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="sparePartSearchInput" class="form-control custom-search-input"
+                       placeholder="Search by Part Code, Name, or Brand..." onkeyup="filterPartsLocally()">
+            </div>
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <!-- Visible Refresh Button -->
+            <button type="button" class="btn btn-refresh-console w-100 w-md-auto" onclick="loadAllSpareParts()">
+                <i class="fa-solid fa-rotate me-2"></i>Refresh Inventory
+            </button>
+        </div>
+    </div>
+
+        <!-- Filter Badges -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button class="btn btn-outline-custom active-filter px-3 py-1 fs-8" id="btnFilterAll" onclick="loadAllSpareParts()">
+                <i class="fa-solid fa-list me-1"></i>ALL PARTS
+            </button>
+            <button class="btn btn-outline-custom px-3 py-1 fs-8 text-warning admin-only-action" id="btnFilterLowStock" onclick="loadLowStockSpareParts()">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>LOW STOCK ALERTS
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Table Panel -->
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-custom mb-0 align-middle">
+                <thead>
+                <tr>
+                    <th>Part Code</th>
+                    <th>Part Name</th>
+                    <th>Brand</th>
+                    <th>Type</th>
+                    <th>Cost Price</th>
+                    <th>Unit Price</th>
+                    <th>Stock Qty</th>
+                    <th>Reorder Level</th>
+                    <th>Status</th>
+                    <th class="text-end px-4 admin-only-action">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="sparePartTableBody">
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-5 fs-7">
+                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Loading inventory details...
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Save & Update Spare Part -->
+<div class="modal fade" id="sparePartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content custom-modal">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-white" id="sparePartModalTitle">
+                    <i class="fa-solid fa-box me-2 text-primary-color"></i>Add New Spare Part
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <form id="sparePartForm">
+                    <input type="hidden" id="editPartCode">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="custom-label">Part Name *</label>
+                            <input type="text" class="form-control custom-input" id="partName" placeholder="e.g. Engine Oil Filter" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Brand</label>
+                            <input type="text" class="form-control custom-input" id="brand" placeholder="e.g. Toyota / Bosch">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Part Type *</label>
+                            <select class="form-select custom-input" id="partType" required>
+                                <option value="SPARE_PART" selected>SPARE_PART</option>
+                                <option value="CONSUMABLE">CONSUMABLE</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Cost Price (LKR) *</label>
+                            <input type="number" step="0.01" min="0" class="form-control custom-input" id="costPrice" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Unit Price (LKR) *</label>
+                            <input type="number" step="0.01" min="0" class="form-control custom-input" id="unitPrice" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Quantity in Stock *</label>
+                            <input type="number" min="0" class="form-control custom-input" id="quantityInStock" placeholder="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="custom-label">Reorder Level *</label>
+                            <input type="number" min="0" class="form-control custom-input" id="reorderLevel" placeholder="0" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-custom px-4" onclick="saveOrUpdateSparePart()">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Save Part
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/admin/spare-part-manage.js"></script>
+</body>
+</html>

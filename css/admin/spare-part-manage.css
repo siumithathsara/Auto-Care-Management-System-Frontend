@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --bg-app: #080A0F;
+    --bg-panel: #11151D;
+    --border-color: rgba(255, 255, 255, 0.08);
+
+    --primary-color: #A78BFA;
+    --primary-hover: #8B5CF6;
+    --primary-glow: rgba(167, 139, 250, 0.15);
+}
+
+/* Base Layout */
+body.vc-app {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-app);
+    color: #F8FAFC;
+    min-height: 100vh;
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.kpi-warning-card {
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-panel) 100%);
+}
+
+.clickable-kpi {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.clickable-kpi:hover {
+    transform: translateY(-2px);
+}
+
+.kpi-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #94A3B8;
+}
+
+.kpi-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.kpi-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.bg-primary-glow { background: rgba(167, 139, 250, 0.12); }
+.bg-warning-glow { background: rgba(245, 158, 11, 0.12); }
+
+/* Panel Containers */
+.panel-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 24px;
+}
+
+/* Search Box Wrapper */
+.custom-search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Icon Inside Input Bar */
+.custom-search-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748B;
+    font-size: 0.95rem;
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* Search Input Field */
+.custom-search-input {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0F172A !important;
+    border-radius: 8px !important;
+    padding: 10px 16px 10px 42px !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    height: 44px !important;
+    width: 100%;
+}
+
+.custom-search-input:focus {
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3) !important;
+    border-color: #A78BFA !important;
+    outline: none;
+}
+
+/* Refresh Console Button */
+/* Clean Dark Refresh Button */
+.btn-refresh-console {
+    background: #1E293B !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important; /* Outline/Border එක සරල neutral පැහැයකට හැරෙව්වා */
+    color: #F8FAFC !important;
+    border-radius: 8px !important;
+    height: 44px !important;
+    padding: 0 20px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Icon එක පැහැදිලිව පෙනෙන පරිදි */
+.btn-refresh-console i {
+    color: #A78BFA !important;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover වෙද්දී Dark Black වෙන විදිය */
+.btn-refresh-console:hover {
+    background: #090D16 !important; /* Fully Dark Black background */
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.btn-refresh-console:hover i {
+    color: #FFFFFF !important; /* Hover වෙද්දී icon එකත් සුදු පැහැයෙන් ලස්සනට Highlight වේ */
+}
+
+/* Table Rows & Badges */
+.row-low-stock {
+    background: rgba(245, 158, 11, 0.04) !important;
+}
+
+.badge-low-stock {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    animation: pulseAlert 2s infinite;
+}
+
+.badge-normal-stock {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-type-SPARE_PART {
+    background: rgba(167, 139, 250, 0.15);
+    color: #C4B5FD;
+    border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+.badge-type-CONSUMABLE {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Animations */
+@keyframes pulseAlert {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
