@@ -1,0 +1,112 @@
+/* Button Compact Styling */
+.btn-primary-custom {
+    background-color: var(--primary-color, #A78BFA);
+    color: #11151D;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+    padding: 9px 20px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-custom:hover {
+    background-color: #9061F9;
+    color: #ffffff;
+}
+
+/* KPI Summary Card Styles */
+.kpi-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-panel, #11151D);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+    border-radius: 14px;
+    padding: 18px 24px;
+}
+
+.kpi-title {
+    color: var(--text-muted, #A0AEC0);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: block;
+}
+
+.kpi-value {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 6px 0 0 0;
+    line-height: 1;
+}
+
+.text-emerald {
+    color: #10B981 !important;
+}
+
+.bg-emerald-glow {
+    background: rgba(16, 185, 129, 0.15) !important;
+}
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(167, 139, 250, 0.15);
+    color: var(--primary-color, #A78BFA);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+/* Table Badges & Action Buttons */
+.supplier-code-badge {
+    background-color: rgba(167, 139, 250, 0.15);
+    color: var(--primary-color, #A78BFA);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-status-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.badge-status-inactive {
+    background: rgba(239, 68, 68, 0.15);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.btn-action-icon {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+    color: var(--text-muted, #A0AEC0);
+    border-radius: 6px;
+    padding: 5px 10px;
+    transition: all 0.2s ease;
+}
+
+.btn-action-icon:hover {
+    background: rgba(167, 139, 250, 0.15);
+    color: var(--primary-color, #A78BFA);
+    border-color: var(--primary-color, #A78BFA);
+}
