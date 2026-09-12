@@ -26,9 +26,11 @@
     </div>
 
     <!-- Stats & Filters Bar -->
+    <!-- Stats & Filters Bar -->
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
-            <div class="kpi-card">
+        <!-- KPI Card Block -->
+        <div class="col-12 col-lg-4">
+            <div class="kpi-card h-100">
                 <div>
                     <div class="kpi-title">TOTAL APPOINTMENTS</div>
                     <div class="kpi-value" id="adminTotalCount">0</div>
@@ -38,15 +40,28 @@
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-8">
-            <div class="panel-card h-100 d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
-                <!-- Search Box -->
-                <div class="search-box" style="max-width: 280px;">
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="adminSearchInput" class="form-control custom-input ps-5" placeholder="Search Code, Customer, Plate..." onkeyup="filterAppointmentsLocally()">
+
+        <!-- Controls Block (Search & Status Filters) -->
+        <div class="col-12 col-lg-8">
+            <div class="panel-card h-100 d-flex flex-column justify-content-center gap-3 py-3 px-3">
+
+                <!-- Row 1: Search Box & Refresh Button -->
+                <div class="row g-2 align-items-center w-100 m-0">
+                    <div class="col-12 col-sm-8 p-0 pe-sm-2">
+                        <div class="custom-search-box">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="serviceSearchInput" class="form-control custom-search-input"
+                                   placeholder="Search services..." onkeyup="filterServicesLocally()">
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-4 p-0 text-sm-end mt-2 mt-sm-0">
+                        <button type="button" class="btn btn-refresh-console w-100" onclick="location.reload()">
+                            <i class="fa-solid fa-rotate me-2"></i>Refresh Console
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Status Filter Badges (Pill style with Spacing) -->
+                <!-- Row 2: Status Filter Badges -->
                 <div class="d-flex align-items-center gap-2 flex-wrap" id="statusFilterContainer">
                     <button class="btn btn-outline-custom active-filter px-3 py-1 fs-8" onclick="filterByStatus('ALL', this)">ALL</button>
                     <button class="btn btn-outline-custom px-3 py-1 fs-8 text-warning" onclick="filterByStatus('PENDING', this)">PENDING</button>
@@ -54,6 +69,7 @@
                     <button class="btn btn-outline-custom px-3 py-1 fs-8 text-success" onclick="filterByStatus('COMPLETED', this)">COMPLETED</button>
                     <button class="btn btn-outline-custom px-3 py-1 fs-8 text-danger" onclick="filterByStatus('CANCELLED', this)">CANCELLED</button>
                 </div>
+
             </div>
         </div>
     </div>
