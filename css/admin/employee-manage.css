@@ -1,0 +1,12 @@
+/* Table Column Text Visibility Overrides */
+.table-custom td {
+    color: #e2e8f0 !important;
+}
+
+.table-custom td span.text-white {
+    color: #ffffff !important;
+}
+
+.table-custom .action-col {
+    min-width: 120px;
+}
