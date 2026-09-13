@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --bg-app: #080A0F;
+    --bg-panel: #11151D;
+    --border-color: rgba(255, 255, 255, 0.08);
+
+    --primary-color: #A78BFA;
+    --primary-hover: #8B5CF6;
+    --primary-glow: rgba(167, 139, 250, 0.15);
+}
+
+body.vc-app {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-app);
+    color: #F8FAFC;
+    min-height: 100vh;
+}
+
+/* KPI Card Header Styling */
+.kpi-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.kpi-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #94A3B8;
+}
+
+.kpi-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.kpi-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.bg-primary-glow {
+    background: rgba(167, 139, 250, 0.12);
+}
+
+/* Modern Panel Layouts */
+.panel-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 24px;
+}
+
+/* Single Universal Search Bar */
+.custom-search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-search-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748B;
+    font-size: 0.95rem;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.custom-search-input {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0F172A !important;
+    border-radius: 8px !important;
+    padding: 10px 16px 10px 42px !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    height: 44px !important;
+    width: 100%;
+}
+
+.custom-search-input:focus {
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3) !important;
+    border-color: #A78BFA !important;
+    outline: none;
+}
+
+/* Clean Dark Refresh Console Button */
+.btn-refresh-console {
+    background: #1E293B !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #F8FAFC !important;
+    border-radius: 8px !important;
+    height: 44px !important;
+    padding: 0 20px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-refresh-console i {
+    color: #A78BFA !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-refresh-console:hover {
+    background: #090D16 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.btn-refresh-console:hover i {
+    color: #FFFFFF !important;
+}
+
+/* Custom Table Layout */
+.table-custom {
+    color: #F8FAFC;
+    margin-bottom: 0;
+}
+
+.table-custom thead th {
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-color);
+    color: #94A3B8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 16px 20px;
+}
+
+.table-custom tbody td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 16px 20px;
+    font-size: 0.9rem;
+}
+
+.table-custom tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Modal Form Styles */
+.custom-modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    border-radius: 14px;
+}
+
+.custom-modal .modal-header,
+.custom-modal .modal-footer {
+    border-color: var(--border-color);
+}
+
+.custom-label {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: #94A3B8;
+    margin-bottom: 6px;
+}
+
+.custom-input {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid var(--border-color) !important;
+    color: #F8FAFC !important;
+    border-radius: 8px !important;
+    padding: 10px 14px;
+}
+
+.custom-input:focus {
+    border-color: #A78BFA !important;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2) !important;
+    outline: none;
+}
