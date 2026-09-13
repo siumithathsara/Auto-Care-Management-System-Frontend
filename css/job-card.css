@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --bg-app: #090B10;
+    --bg-panel: #11151E;
+    --border-color: rgba(255, 255, 255, 0.08);
+
+    --primary-color: #A78BFA;
+    --primary-hover: #8B5CF6;
+    --primary-glow: rgba(167, 139, 250, 0.15);
+}
+
+body.vc-app {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-app);
+    color: #F8FAFC;
+    min-height: 100vh;
+}
+
+.btn-primary-custom {
+    background: var(--primary-hover);
+    border: none;
+    color: #FFFFFF;
+    font-weight: 600;
+    border-radius: 8px;
+    height: 42px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary-custom:hover {
+    background: #7C3AED;
+    color: #FFFFFF;
+}
+
+.panel-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+/* Search Bar Wrapper Fix */
+.custom-search-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* Magnifying Glass Icon Fix (Overlap වැළැක්වීමට) */
+.custom-search-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748B !important; /* Dark Grey Icon for White Input */
+    font-size: 0.95rem;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* White Search Input Style */
+.custom-search-input.white-search-bar {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0F172A !important; /* Dark text for easy reading */
+    border-radius: 8px !important;
+    padding-left: 42px !important; /* Icon එක උඩ Text නොවැටීමට වම්පස Space එක */
+    padding-right: 16px !important;
+    font-weight: 500;
+    font-size: 0.92rem;
+    height: 44px !important;
+}
+
+/* Placeholder Styling */
+.custom-search-input.white-search-bar::placeholder {
+    color: #64748B !important;
+    font-weight: 400;
+}
+
+/* Focus Glow Effect */
+.custom-search-input.white-search-bar:focus {
+    background-color: #FFFFFF !important;
+    border-color: #A78BFA !important;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3) !important;
+    outline: none;
+}
+
+.btn-refresh-console {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid var(--border-color) !important;
+    color: #F8FAFC !important;
+    border-radius: 8px !important;
+    height: 42px !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-refresh-console:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Table Design */
+.table-custom {
+    color: #F8FAFC;
+    margin-bottom: 0;
+}
+
+.table-custom thead th {
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-color);
+    color: #64748B;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 14px 20px;
+}
+
+.table-custom tbody td {
+    border-bottom: 1px solid var(--border-color);
+    padding: 14px 20px;
+    font-size: 0.88rem;
+}
+
+.table-custom tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.bg-primary-glow {
+    background: var(--primary-glow);
+}
+
+.text-primary-color {
+    color: var(--primary-color) !important;
+}
+
+.list-group-item-dark-custom {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: var(--border-color);
+    color: #F8FAFC;
+}
+/* Card Container */
+.modal-content.panel-card {
+    background-color: #0F131C !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Form Labels */
+.modal-custom-label {
+    color: #8E9BAE !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Input Styles */
+.custom-search-input {
+    background-color: #171C28 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #E2E8F0 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+    height: 44px !important;
+}
+
+textarea.custom-search-input {
+    height: auto !important;
+}
+
+.custom-search-input::placeholder {
+    color: #475569 !important;
+}
+
+.custom-search-input:focus {
+    background-color: #1A2234 !important;
+    border-color: #8B5CF6 !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+    outline: none;
+}
+
+/* Modal Buttons */
+.btn-modal-cancel {
+    background-color: #181E2B !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-cancel:hover {
+    background-color: #232B3E !important;
+    color: #FFFFFF !important;
+}
+
+.btn-modal-submit {
+    background-color: #8B85F6 !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-submit:hover {
+    background-color: #7C3AED !important;
+    color: #FFFFFF !important;
+}

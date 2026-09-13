@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Job Card - AutoCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/job-card.css">
+</head>
+<body class="vc-app">
+
+<div class="container py-5">
+    <div class="row justify-content-center py-2">
+        <div class="col-12 col-lg-8">
+            <div class="panel-card p-4 text-center mb-4">
+                <h3 class="fw-bold text-white mb-2"><i class="fa-solid fa-car-side text-primary-color me-2"></i>Track Vehicle Service Status</h3>
+                <p class="text-muted fs-7 mb-4">Enter your Job Card Code below to check current repair progress, services, and estimated total costs.</p>
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8">
+                        <div class="input-group">
+                            <input type="text" id="customerSearchCode" class="form-control custom-search-input text-center" placeholder="e.g. JC-2026-001">
+                            <button class="btn btn-primary-custom px-4" type="button" onclick="trackJobCardForCustomer()">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i> Track Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Details Result Card -->
+            <div id="customerJobCardResult" class="d-none">
+                <div class="panel-card p-4">
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-3 mb-3">
+                        <div>
+                            <span class="badge bg-primary-glow text-primary-color px-3 py-2 fw-semibold" id="custStatusBadge">IN_PROGRESS</span>
+                            <h4 class="text-white fw-bold mt-2 mb-0" id="custJobCardCode">JC-0000</h4>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted fs-7 d-block">Vehicle License Plate</span>
+                            <span class="fs-5 fw-bold text-white" id="custLicensePlate">--</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted fs-7 d-block">Mileage In</span>
+                            <span class="fw-bold text-white" id="custMileage">0 KM</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted fs-7 d-block">Fuel Level</span>
+                            <span class="fw-bold text-white" id="custFuel">--</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted fs-7 d-block">Service Advisor</span>
+                            <span class="fw-bold text-white" id="custAdvisor">--</span>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted fs-7 d-block">Est. Completion</span>
+                            <span class="fw-bold text-white" id="custEstTime">--</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="bg-dark p-3 rounded-3 border border-secondary h-100">
+                                <h6 class="text-primary-color fw-bold mb-2"><i class="fa-solid fa-list-check me-2"></i>Allocated Services</h6>
+                                <ul class="list-unstyled mb-0 fs-7 text-muted" id="custServicesList"></ul>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="bg-dark p-3 rounded-3 border border-secondary h-100">
+                                <h6 class="text-primary-color fw-bold mb-2"><i class="fa-solid fa-gears me-2"></i>Spare Parts Added</h6>
+                                <ul class="list-unstyled mb-0 fs-7 text-muted" id="custPartsList"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top border-secondary text-end">
+                        <span class="text-muted me-2">Estimated Total Fee:</span>
+                        <span class="fs-4 fw-bold text-white" id="custTotalFee">LKR 0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/customer/job-card-tracker.js"></script>
+</body>
+</html>

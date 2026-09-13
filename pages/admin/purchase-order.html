@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order Management - AutoCare</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Common & Page CSS -->
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/job-card.css">
+</head>
+<body class="vc-app">
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-8">
+            <h3 class="fw-bold text-white mb-1">
+                <i class="fa-solid fa-cart-flatbed text-primary-color me-2"></i>Purchase Order Console
+            </h3>
+            <p class="text-muted mb-0 fs-7">Manage supplier stock procurement, create purchase orders, and track deliveries.</p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end admin-only">
+            <button class="btn btn-primary-custom px-4" data-bs-toggle="modal" data-bs-target="#createPoModal">
+                <i class="fa-solid fa-plus me-2"></i>Create New PO
+            </button>
+        </div>
+    </div>
+
+    <!-- Controls & Search -->
+    <div class="panel-card mb-4 p-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-12 col-md-8">
+                <div class="custom-search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="universalPoSearch" class="form-control custom-search-input white-search-bar"
+                           placeholder="Search by PO Code, Supplier Name, Status..." onkeyup="filterOrdersLocally()">
+                </div>
+            </div>
+            <div class="col-12 col-md-4 text-md-end">
+                <button type="button" class="btn btn-refresh-console w-100 w-md-auto px-4" onclick="loadAllPurchaseOrders()">
+                    <i class="fa-solid fa-rotate me-2"></i>Refresh Console
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Orders Table -->
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-custom mb-0 align-middle">
+                <thead>
+                <tr>
+                    <th>PO Code</th>
+                    <th>Supplier Details</th>
+                    <th>Created By</th>
+                    <th>Order Date</th>
+                    <th>Expected Delivery</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th class="text-end px-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="poTableBody">
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-5 fs-7">
+                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Loading Purchase Orders...
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE PURCHASE ORDER MODAL -->
+<div class="modal fade" id="createPoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content panel-card">
+            <div class="modal-header border-secondary border-opacity-25 px-4 pt-4 pb-3">
+                <h5 class="modal-title text-white fw-bold fs-5 d-flex align-items-center">
+                    <i class="fa-solid fa-file-circle-plus text-primary-color me-2 fs-6"></i>Create Purchase Order
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <form id="createPoForm">
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">SUPPLIER CODE *</label>
+                            <input type="text" id="poSupplierCode" class="form-control custom-search-input" placeholder="e.g. SUP-1002" required>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">EXPECTED DELIVERY DATE *</label>
+                            <input type="datetime-local" id="poExpectedDate" class="form-control custom-search-input" required>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic PO Items Section -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="modal-custom-label text-primary-color">ORDER ITEMS LIST *</span>
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="addPoItemRow()">
+                            <i class="fa-solid fa-plus me-1"></i>Add Item
+                        </button>
+                    </div>
+
+                    <div id="poItemsContainer">
+                        <!-- Dynamic rows will be inserted here -->
+                    </div>
+
+                    <div class="text-end mt-3 pt-3 border-top border-secondary border-opacity-25">
+                        <span class="text-muted fs-7 me-2">Calculated Total Amount:</span>
+                        <span class="fs-5 fw-bold text-primary-color" id="poGrandTotalLabel">LKR 0.00</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 px-4 py-3">
+                <button type="button" class="btn btn-modal-cancel px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-modal-submit px-4 py-2" onclick="submitCreatePo()">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Issue Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW PO DETAILS MODAL -->
+<div class="modal fade" id="viewPoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content panel-card">
+            <div class="modal-header border-secondary border-opacity-25 px-4 pt-4 pb-3">
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-primary-glow text-primary-color me-2 px-3 py-2" id="viewPoStatus">PENDING</span>
+                    <h5 class="modal-title text-white fw-bold d-inline" id="viewPoCode">PO-0000</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3 fs-7">
+                <div class="row g-3 mb-4 p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block modal-custom-label">Supplier Code</span>
+                        <strong class="text-white" id="viewSupplierCode">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block modal-custom-label">Supplier Name</span>
+                        <strong class="text-white" id="viewSupplierName">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block modal-custom-label">Created By</span>
+                        <strong class="text-white" id="viewCreatedBy">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block modal-custom-label">Order Date</span>
+                        <strong class="text-white" id="viewOrderDate">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3 mt-2">
+                        <span class="text-muted d-block modal-custom-label">Expected Delivery</span>
+                        <strong class="text-primary-color" id="viewExpectedDate">--</strong>
+                    </div>
+                </div>
+
+                <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-list me-2 text-primary-color"></i>Purchased Items Summary</h6>
+                <div class="table-responsive rounded border border-secondary border-opacity-25 mb-3">
+                    <table class="table table-custom mb-0 align-middle">
+                        <thead>
+                        <tr>
+                            <th>Part Code</th>
+                            <th>Part Name</th>
+                            <th>Ordered Qty</th>
+                            <th>Received Qty</th>
+                            <th>Unit Cost</th>
+                            <th class="text-end">Sub Total</th>
+                        </tr>
+                        </thead>
+                        <tbody id="viewPoItemsTableBody">
+                        <!-- Dynamic items -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-3 bg-primary-glow rounded-3 border border-secondary border-opacity-25 text-end">
+                    <span class="text-muted me-2 fs-6">Grand Total Amount:</span>
+                    <span class="fs-4 fw-bold text-primary-color" id="viewPoTotalAmount">LKR 0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 px-4 py-3">
+                <button type="button" class="btn btn-modal-cancel px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/admin/purchase-order.js"></script>
+</body>
+</html>

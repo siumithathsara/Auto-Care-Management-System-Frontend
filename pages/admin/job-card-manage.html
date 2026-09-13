@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Card Console - AutoCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/job-card.css">
+</head>
+<body class="vc-app">
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-8">
+            <h3 class="fw-bold text-white mb-1">Job Card Console</h3>
+            <p class="text-muted mb-0 fs-7">Manage active job cards, assign spare parts, update job statuses, and view complete details.</p>
+        </div>
+        <div class="col-12 col-md-4 text-md-end admin-advisor-only">
+            <button class="btn btn-primary-custom px-4" data-bs-toggle="modal" data-bs-target="#createJobCardModal">
+                <i class="fa-solid fa-plus me-2"></i>Create Job Card
+            </button>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="panel-card mb-4 p-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-12 col-md-8">
+                <div class="custom-search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="universalJobCardSearch" class="form-control custom-search-input white-search-bar"
+                           placeholder="Search by Job Card Code, Vehicle No, Customer..." onkeyup="filterJobCardsLocally()">
+                </div>
+            </div>
+            <div class="col-12 col-md-4 text-md-end">
+                <button type="button" class="btn btn-refresh-console w-100 w-md-auto px-4" onclick="loadAllJobCards()">
+                    <i class="fa-solid fa-rotate me-2"></i>Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Cards Table -->
+    <div class="panel-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-custom mb-0 align-middle">
+                <thead>
+                <tr>
+                    <th>Job Card</th>
+                    <th>Vehicle & Customer</th>
+                    <th>Advisor</th>
+                    <th>Est. Completion</th>
+                    <th>Status</th>
+                    <th>Est. Total</th>
+                    <th class="text-end px-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="jobCardTableBody">
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5 fs-7">
+                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Loading job cards...
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILED JOB CARD POPUP MODAL -->
+<div class="modal fade" id="jobCardDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content panel-card">
+            <div class="modal-header border-secondary">
+                <div>
+                    <span class="badge bg-primary-glow text-primary-color me-2" id="modalJobStatus">IN_PROGRESS</span>
+                    <h5 class="modal-title text-white fw-bold d-inline" id="modalJobCardCode">JC-0000</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body fs-7">
+                <div class="row g-3 mb-3 p-3 rounded-3 bg-dark border border-secondary">
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block">Vehicle / Plate</span>
+                        <strong class="text-white" id="modalVehicle">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block">Customer</span>
+                        <strong class="text-white" id="modalCustomer">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block">Advisor</span>
+                        <strong class="text-white" id="modalAdvisor">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <span class="text-muted d-block">Appointment Code</span>
+                        <strong class="text-white" id="modalAppointment">N/A</strong>
+                    </div>
+                    <div class="col-6 col-md-3 mt-2">
+                        <span class="text-muted d-block">Mileage In</span>
+                        <strong class="text-white" id="modalMileage">0 KM</strong>
+                    </div>
+                    <div class="col-6 col-md-3 mt-2">
+                        <span class="text-muted d-block">Fuel Level</span>
+                        <strong class="text-white" id="modalFuel">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3 mt-2">
+                        <span class="text-muted d-block">Check-In Time</span>
+                        <strong class="text-white" id="modalCheckIn">--</strong>
+                    </div>
+                    <div class="col-6 col-md-3 mt-2">
+                        <span class="text-muted d-block">Est. Completion</span>
+                        <strong class="text-white" id="modalEstCompletion">--</strong>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted d-block mb-1">Customer Notes:</span>
+                        <div class="p-2 bg-dark rounded border border-secondary text-white" id="modalCustomerNotes">None</div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <span class="text-muted d-block mb-1">Advisor Notes:</span>
+                        <div class="p-2 bg-dark rounded border border-secondary text-white" id="modalAdvisorNotes">None</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <h6 class="text-primary-color fw-bold">Services Allocated</h6>
+                        <ul class="list-group list-group-flush rounded border border-secondary" id="modalServicesGroup"></ul>
+                        <div class="text-end mt-1 text-muted">Services Total: <strong class="text-white" id="modalServicesFee">LKR 0.00</strong></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <h6 class="text-primary-color fw-bold">Spare Parts Added</h6>
+                        <ul class="list-group list-group-flush rounded border border-secondary" id="modalPartsGroup"></ul>
+                        <div class="text-end mt-1 text-muted">Parts Total: <strong class="text-white" id="modalPartsFee">LKR 0.00</strong></div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-primary-glow rounded-3 border border-secondary text-end">
+                    <span class="text-muted me-2 fs-6">Estimated Grand Total:</span>
+                    <span class="fs-4 fw-bold text-primary-color" id="modalGrandTotal">LKR 0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE JOB CARD MODAL -->
+<div class="modal fade" id="createJobCardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content panel-card">
+            <div class="modal-header border-secondary border-opacity-25 px-4 pt-4 pb-3">
+                <h5 class="modal-title text-white fw-bold fs-5 d-flex align-items-center">
+                    <i class="fa-solid fa-box-archive text-primary-color me-2 fs-6"></i>Create New Job Card
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <form id="createJobCardForm">
+                    <div class="row g-3">
+                        <!-- Vehicle Code -->
+                        <div class="col-12">
+                            <label class="form-label modal-custom-label">VEHICLE CODE *</label>
+                            <input type="text" id="reqVehicleCode" class="form-control custom-search-input" placeholder="e.g. VEH-1002" required>
+                        </div>
+
+                        <!-- Advisor Code & Appointment Code -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">ADVISOR USER CODE *</label>
+                            <input type="text" id="reqAdvisorCode" class="form-control custom-search-input" placeholder="e.g. ADV-001" required>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">APPOINTMENT CODE</label>
+                            <input type="text" id="reqAppointmentCode" class="form-control custom-search-input" placeholder="e.g. APT-501">
+                        </div>
+
+                        <!-- Mileage & Fuel Level -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">MILEAGE IN (KM) *</label>
+                            <input type="number" id="reqMileage" class="form-control custom-search-input" placeholder="0" min="0" required>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">FUEL LEVEL *</label>
+                            <select id="reqFuelLevel" class="form-select custom-search-input" required>
+                                <option value="">Select Fuel Level</option>
+                                <option value="EMPTY">EMPTY</option>
+                                <option value="25%">25%</option>
+                                <option value="50%">50%</option>
+                                <option value="75%">75%</option>
+                                <option value="FULL">FULL</option>
+                            </select>
+                        </div>
+
+                        <!-- Completion Time & Service Codes -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">ESTIMATED COMPLETION TIME *</label>
+                            <input type="datetime-local" id="reqEstTime" class="form-control custom-search-input" required>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">SERVICE CODES *</label>
+                            <input type="text" id="reqServiceCodes" class="form-control custom-search-input" placeholder="SRV001, SRV002" required>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">CUSTOMER NOTES</label>
+                            <textarea id="reqCustomerNotes" class="form-control custom-search-input" rows="2" placeholder="e.g. Noise from front suspension"></textarea>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label modal-custom-label">ADVISOR NOTES</label>
+                            <textarea id="reqAdvisorNotes" class="form-control custom-search-input" rows="2" placeholder="e.g. Check brake pad wear"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 px-4 py-3">
+                <button type="button" class="btn btn-modal-cancel px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-modal-submit px-4 py-2" onclick="submitCreateJobCard()">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Save Job Card
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD SPARE PARTS MODAL -->
+<div class="modal fade" id="addPartsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content panel-card">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-white fw-bold"><i class="fa-solid fa-wrench text-primary-color me-2"></i>Add Spare Parts</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="addPartJobCardCode">
+                <div class="mb-3">
+                    <label class="form-label text-muted fs-7">Spare Part Item Code *</label>
+                    <input type="text" id="partItemCode" class="form-control custom-search-input" placeholder="e.g. PRT-1002" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted fs-7">Quantity *</label>
+                    <input type="number" id="partQuantity" class="form-control custom-search-input" min="1" value="1" required>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary-custom px-4" onclick="submitAddPart()">Add Part</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../js/admin/job-card-manage.js"></script>
+</body>
+</html>
