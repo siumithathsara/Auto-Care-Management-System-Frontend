@@ -1,0 +1,316 @@
+:root {
+    --bg-dark: #0f172a;
+    --panel-bg: rgba(30, 41, 59, 0.7);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --primary-color: #a78bfa;
+    --primary-glow: rgba(167, 139, 250, 0.25);
+    --text-white: #f8fafc;
+    --text-muted: #94a3b8;
+    --emerald-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+}
+
+body.vc-app {
+    background-color: var(--bg-dark);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--text-white);
+    min-height: 100vh;
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(8px);
+}
+
+.kpi-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.kpi-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 0;
+    color: var(--text-white);
+}
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: var(--primary-glow);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+/* Panels & Tables */
+.panel-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+}
+
+.table-custom {
+    color: var(--text-white) !important;
+    background-color: transparent !important;
+    margin-bottom: 0;
+}
+
+.table-custom th {
+    background: rgba(15, 23, 42, 0.6) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.table-custom td {
+    background: transparent !important;
+    color: var(--text-white) !important;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color) !important;
+    font-size: 0.88rem;
+}
+
+/* Badges */
+.invoice-code-badge {
+    background: var(--primary-glow);
+    color: var(--primary-color);
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.badge-payment-paid {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--emerald-color);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.badge-payment-unpaid {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger-color);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.badge-payment-partial {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning-color);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.text-emerald { color: var(--emerald-color) !important; }
+.text-warning { color: var(--warning-color) !important; }
+.bg-emerald-glow { background: rgba(16, 185, 129, 0.15) !important; }
+.bg-warning-glow { background: rgba(245, 158, 11, 0.15) !important; }
+
+/* Buttons & Inputs */
+.btn-primary-custom {
+    background: var(--primary-color);
+    color: #000;
+    font-weight: 700;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-custom:hover {
+    background: #9061f9;
+    color: #fff;
+}
+
+.btn-dark-panel {
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--text-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 9px 16px;
+}
+
+.btn-dark-panel:hover {
+    background: rgba(30, 41, 59, 0.9);
+    color: var(--text-white);
+}
+
+.btn-action-icon {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-white);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-action-icon:hover {
+    background: var(--primary-color);
+    color: #000;
+}
+
+
+/* Search Input Wrapper */
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Search Bar එක ඇතුලට Search Icon එක පිහිටුවීම */
+.search-input-wrapper .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 0.95rem;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Custom Search Input Box */
+.custom-search-input {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 14px 10px 40px !important; /* Icon එක සඳහා වම් පසින් ඉඩ තබා ඇත */
+    font-size: 0.95rem !important;
+    width: 100%;
+}
+
+.custom-search-input::placeholder {
+    color: #6c757d !important;
+}
+
+.custom-search-input:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 0 0 0.25rem rgba(167, 139, 250, 0.4) !important;
+    outline: none !important;
+}
+
+/* Refresh Button - දිග වැඩි කර Hover එක Dark පමණක් කර ඇත */
+.btn-refresh-link {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-white) !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 10px 24px !important; /* Button එකේ පළල/දිග වැඩි කිරීමට */
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-refresh-link:hover {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+/* Filter Pill Buttons */
+.btn-filter-pill {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f8fafc !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    letter-spacing: 0.5px;
+}
+
+.btn-filter-pill:hover, .btn-filter-pill.active {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Modals & Inputs */
+.custom-modal {
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.custom-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.custom-input {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-white) !important;
+    border-radius: 8px;
+}
+
+.custom-input:focus {
+    background: rgba(15, 23, 42, 0.95) !important;
+    color: var(--text-white) !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem var(--primary-glow) !important;
+}
+
+.custom-input option {
+    background: #1e293b;
+    color: var(--text-white);
+}
+
+.invoice-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.88rem;
+}
+.invoice-detail-row .text-muted {
+    color: #94a3b8 !important;
+    font-weight: 500;
+}
+
+.invoice-detail-row:last-child {
+    border-bottom: none;
+}
+
+.fs-8 { font-size: 0.75rem !important; }
+.fs-7 { font-size: 0.85rem !important; }
+
