@@ -45,13 +45,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const result = await response.json();
         console.log("Full Server Response:", result);
 
-        if (response.ok) {
-            showAlert("Login Successful! Redirecting...", "success");
+        const resCode = result.code || result.status || response.status;
+        const resBody = result.body || result.data || result;
+
+        if (response.ok && (resCode === 200 || resCode === 201)) {
 
             let token = "";
             let role = "CUSTOMER";
-
-            const resBody = result.body || result.data || result;
 
             if (typeof resBody === 'object' && resBody !== null) {
                 token = resBody.token || resBody.accessToken || "";
@@ -64,7 +64,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 }
             }
 
-
             if ((!role || role === "CUSTOMER") && (enteredUsername.toLowerCase() === "admin" || enteredUsername.toLowerCase().includes("admin"))) {
                 role = "ADMIN";
             }
@@ -72,10 +71,17 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             console.log("Extracted Token:", token);
             console.log("Extracted Role:", role);
 
+            // Token එකක් නැතිනම් Login සාර්ථක නොවේ
+            if (!token) {
+                showAlert(result.message || "Invalid Username or Password!", "danger");
+                return;
+            }
+
+            showAlert("Login Successful! Redirecting...", "success");
+
             localStorage.setItem("jwtToken", token);
             localStorage.setItem("userRole", role);
             localStorage.setItem("username", authData.username);
-
 
             setTimeout(() => {
                 const upperRole = role ? role.toString().toUpperCase() : "";
@@ -91,6 +97,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             }, 1000);
 
         } else {
+
             showAlert(result.message || "Invalid Username or Password!", "danger");
         }
     } catch (error) {
