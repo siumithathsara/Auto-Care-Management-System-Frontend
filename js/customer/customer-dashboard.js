@@ -1,39 +1,91 @@
-// Base API Endpoint corresponding to CustomerDashboardController
+
 const CUSTOMER_DASHBOARD_API = "http://localhost:8080/api/v1/customer-dashboard";
+const USER_API = "http://localhost:8080/api/v1/user"; // User Controller for fetching logged user details
 
 let profileModalInstance = null;
 let serviceHistoryChartInstance = null;
 let serviceTypeChartInstance = null;
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     // Initialize Profile Modal
-    profileModalInstance = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    const modalEl = document.getElementById('userProfileModal');
+    if (modalEl) {
+        profileModalInstance = new bootstrap.Modal(modalEl);
+    }
 
-    // Retrieve logged customer details from localStorage or use default
-    const customerCode = localStorage.getItem("customerCode") || "CUST-001";
+    const username = localStorage.getItem("username");
 
-    // Set Topbar user name
-    document.getElementById("topbarUserName").innerText = localStorage.getItem("userName") || "Customer User";
-    document.getElementById("topbarUserRole").innerText = localStorage.getItem("userRole") || "CUSTOMER";
+    if (!username) {
+        console.error("No logged-in user found in LocalStorage!");
+        showEmptyDashboardError("Session expired or invalid user. Please log in again.");
+        return;
+    }
 
-    // Load Data from Spring Boot Backend
-    fetchCustomerDashboardData(customerCode);
+    const savedUserRole = localStorage.getItem("userRole") || "CUSTOMER";
+    const topbarNameEl = document.getElementById("topbarUserName");
+    const topbarRoleEl = document.getElementById("topbarUserRole");
+
+    if (topbarNameEl) topbarNameEl.innerText = username;
+    if (topbarRoleEl) topbarRoleEl.innerText = savedUserRole;
+
+    console.log("Fetching fresh user profile for username:", username);
+    const customerCode = await fetchRealUserCodeByUsername(username);
+
+    if (!customerCode || customerCode.trim() === "" || customerCode === "ww") {
+        console.error("No valid customerCode found for username:", username);
+        showEmptyDashboardError(`Customer record for '${username}' not found in Database.`);
+    } else {
+
+        localStorage.setItem("customerCode", customerCode);
+        console.log(`Loading Dashboard Data specifically for Customer [${username}] -> Code: [${customerCode}]`);
+
+        fetchCustomerDashboardData(customerCode.trim());
+    }
 
     // Initialize Charts
     initCharts();
 });
 
-// Auth Headers helper
 function getAuthHeaders() {
+    const token = localStorage.getItem("jwtToken");
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem("jwtToken")}`
+        'Authorization': token ? `Bearer ${token}` : ''
     };
 }
 
-// Fetch Customer Dashboard Data via Spring Boot REST Controller
+async function fetchRealUserCodeByUsername(username) {
+    try {
+        const response = await fetch(`${USER_API}/get-user/${username}`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            const commonResponse = await response.json();
+            const userData = commonResponse.body || commonResponse.data || commonResponse;
+
+            if (userData) {
+
+                const foundCode = userData.customerCode || userData.userCode || userData.code || userData.id;
+                if (foundCode) {
+                    console.log("Successfully retrieved Customer Code from Backend:", foundCode);
+                    return foundCode;
+                }
+            }
+        } else {
+            console.warn(`User endpoint returned status ${response.status}`);
+        }
+    } catch (err) {
+        console.error("Error fetching user profile code by username:", err);
+    }
+
+    return username;
+}
+
 async function fetchCustomerDashboardData(customerCode) {
     const endpoint = `${CUSTOMER_DASHBOARD_API}/get-by-customer/${customerCode}`;
+    console.log("Fetching dashboard data from endpoint:", endpoint);
 
     try {
         const response = await fetch(endpoint, {
@@ -43,195 +95,215 @@ async function fetchCustomerDashboardData(customerCode) {
 
         if (response.ok) {
             const commonResponse = await response.json();
-            if (commonResponse.data) {
-                renderDashboardData(commonResponse.data);
+            console.log("Backend Response Data received:", commonResponse);
+
+            if (commonResponse.status === 404 || commonResponse.code === 404 || commonResponse.body === null) {
+                console.warn("Backend Custom 404:", commonResponse.message);
+                showEmptyDashboardError(commonResponse.message || `No customer details found for Code: ${customerCode}`);
+                return;
+            }
+
+            const actualData = commonResponse.body || commonResponse.data || commonResponse;
+
+            if (actualData && typeof actualData === 'object') {
+                renderDashboardData(actualData);
+            } else {
+                showEmptyDashboardError("No dashboard data returned for this customer.");
             }
         } else {
-            console.warn("Backend error or unauthorized. Loading mock/demo data...");
-            loadFallbackData();
+            if (response.status === 404) {
+                showEmptyDashboardError(`Customer code '${customerCode}' not found in Database.`);
+            } else if (response.status === 401 || response.status === 403) {
+                showEmptyDashboardError("Unauthorized access. Please login again.");
+            } else {
+                showEmptyDashboardError(`Failed to load data. Backend status: ${response.status}`);
+            }
         }
     } catch (err) {
-        console.error("Failed to connect with Backend:", err);
-        loadFallbackData();
+        console.error("Failed to connect with Backend (Network Error):", err);
+        showEmptyDashboardError("Network Error: Cannot connect to Backend Server.");
     }
 }
 
-// Populate DTO Data into Dashboard
 function renderDashboardData(data) {
-    // 1. KPI Stats
-    document.getElementById("kpiTotalVehicles").innerText = data.totalVehicles || 0;
-    document.getElementById("kpiActiveJobs").innerText = data.activeJobCards || 0;
-    document.getElementById("kpiCompletedJobs").innerText = data.completedJobCards || 0;
+    console.log("Rendering dashboard with data:", data);
 
-    const pending = data.pendingPaymentAmount || 0;
-    document.getElementById("kpiPendingPayment").innerText = `LKR ${pending.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    const totalVehicles = data.totalVehicles ?? data.totalVehicleCount ?? 0;
+    const activeJobsCount = data.activeJobCards ?? data.activeJobsCount ?? data.activeJobCount ?? (data.activeJobsList ? data.activeJobsList.length : 0);
+    const completedJobsCount = data.completedJobCards ?? data.completedJobsCount ?? data.completedJobCount ?? (data.recentJobHistoryList ? data.recentJobHistoryList.length : 0);
+    const pending = data.pendingPaymentAmount ?? data.pendingAmount ?? 0;
 
-    // 2. Approved Appointments Table
+    const kpiTotalVehicles = document.getElementById("kpiTotalVehicles") || document.getElementById("totalVehicles");
+    const kpiActiveJobs = document.getElementById("kpiActiveJobs") || document.getElementById("activeJobs");
+    const kpiCompletedJobs = document.getElementById("kpiCompletedJobs") || document.getElementById("completedJobs");
+    const kpiPendingPayment = document.getElementById("kpiPendingPayment") || document.getElementById("pendingPayment");
+
+    if (kpiTotalVehicles) kpiTotalVehicles.innerText = totalVehicles;
+    if (kpiActiveJobs) kpiActiveJobs.innerText = activeJobsCount;
+    if (kpiCompletedJobs) kpiCompletedJobs.innerText = completedJobsCount;
+
+    if (kpiPendingPayment) {
+        kpiPendingPayment.innerText = `LKR ${Number(pending).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    }
+
     const appTable = document.getElementById("approvedAppointmentsTable");
-    const appointments = data.approvedAppointments || [];
-    document.getElementById("approvedAppointmentsCount").innerText = appointments.length;
+    const appCountEl = document.getElementById("approvedAppointmentsCount");
+    const appointments = data.approvedAppointments || data.appointmentsList || [];
 
-    if (appointments.length === 0) {
-        appTable.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No confirmed appointments.</td></tr>`;
-    } else {
-        appTable.innerHTML = appointments.map(app => `
-            <tr>
-                <td><small class="text-info fw-bold">${app.appointmentDate || ''} ${app.appointmentTime || ''}</small></td>
-                <td><span class="badge bg-secondary">${app.vehicleNumber || 'N/A'}</span></td>
-                <td>${app.notes || 'General Checkup'}</td>
-                <td><span class="badge bg-success">${app.status || 'CONFIRMED'}</span></td>
-            </tr>
-        `).join('');
+    if (appCountEl) appCountEl.innerText = appointments.length;
+
+    if (appTable) {
+        if (appointments.length === 0) {
+            appTable.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No confirmed appointments.</td></tr>`;
+        } else {
+            appTable.innerHTML = appointments.map(app => `
+                <tr>
+                    <td><small class="text-info fw-bold">${app.appointmentDate || app.date || ''} ${app.appointmentTime || app.time || ''}</small></td>
+                    <td><span class="badge bg-secondary">${app.vehicleNumber || app.vehicleNo || 'N/A'}</span></td>
+                    <td>${app.notes || app.serviceType || 'General Checkup'}</td>
+                    <td><span class="badge bg-success">${app.status || 'CONFIRMED'}</span></td>
+                </tr>
+            `).join('');
+        }
     }
 
-    // 3. Active Jobs List
     const activeTable = document.getElementById("activeJobsTable");
-    const activeJobs = data.activeJobsList || [];
-    document.getElementById("activeJobsCount").innerText = activeJobs.length;
+    const activeCountEl = document.getElementById("activeJobsCount");
+    const activeJobs = data.activeJobsList || data.activeJobs || [];
 
-    if (activeJobs.length === 0) {
-        activeTable.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No active services running.</td></tr>`;
-    } else {
-        activeTable.innerHTML = activeJobs.map(job => `
-            <tr>
-                <td><strong class="text-warning">${job.jobCardCode || 'N/A'}</strong></td>
-                <td><span class="badge bg-secondary">${job.vehicleNumber || 'N/A'}</span></td>
-                <td><small class="text-muted">${job.checkInTime || 'N/A'}</small></td>
-                <td><span class="badge bg-warning text-dark">${job.status || 'IN_PROGRESS'}</span></td>
-            </tr>
-        `).join('');
+    if (activeCountEl) activeCountEl.innerText = activeJobs.length;
+
+    if (activeTable) {
+        if (activeJobs.length === 0) {
+            activeTable.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No active services running.</td></tr>`;
+        } else {
+            activeTable.innerHTML = activeJobs.map(job => `
+                <tr>
+                    <td><strong class="text-warning">${job.jobCardCode || job.jobCardNo || 'N/A'}</strong></td>
+                    <td><span class="badge bg-secondary">${job.vehicleNumber || job.vehicleNo || 'N/A'}</span></td>
+                    <td><small class="text-muted">${job.checkInTime || job.startDate || 'N/A'}</small></td>
+                    <td><span class="badge bg-warning text-dark">${job.status || 'IN_PROGRESS'}</span></td>
+                </tr>
+            `).join('');
+        }
     }
 
-    // 4. Recent Job History
     const historyTable = document.getElementById("recentHistoryTable");
-    const history = data.recentJobHistoryList || [];
+    const history = data.recentJobHistoryList || data.jobHistory || [];
 
-    if (history.length === 0) {
-        historyTable.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No service history found.</td></tr>`;
-    } else {
-        historyTable.innerHTML = history.map(h => `
-            <tr>
-                <td><strong class="text-light">${h.jobCardCode || 'N/A'}</strong></td>
-                <td><span class="badge bg-secondary">${h.vehicleNumber || 'N/A'}</span></td>
-                <td><small class="text-muted">${h.checkInTime || 'N/A'}</small></td>
-                <td><small class="text-muted">${h.checkOutTime || 'N/A'}</small></td>
-                <td><span class="badge bg-success">${h.status || 'COMPLETED'}</span></td>
-            </tr>
-        `).join('');
+    if (historyTable) {
+        if (history.length === 0) {
+            historyTable.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No service history found.</td></tr>`;
+        } else {
+            historyTable.innerHTML = history.map(h => `
+                <tr>
+                    <td><strong class="text-light">${h.jobCardCode || h.jobCardNo || 'N/A'}</strong></td>
+                    <td><span class="badge bg-secondary">${h.vehicleNumber || h.vehicleNo || 'N/A'}</span></td>
+                    <td><small class="text-muted">${h.checkInTime || h.startDate || 'N/A'}</small></td>
+                    <td><small class="text-muted">${h.checkOutTime || h.endDate || 'N/A'}</small></td>
+                    <td><span class="badge bg-success">${h.status || 'COMPLETED'}</span></td>
+                </tr>
+            `).join('');
+        }
     }
 }
 
-// Fallback Mock Data matching CustomerDashboardDTO
-function loadFallbackData() {
-    const mockData = {
-        totalVehicles: 2,
-        activeJobCards: 1,
-        completedJobCards: 6,
-        pendingPaymentAmount: 18500.00,
-        approvedAppointments: [
-            {
-                appointmentDate: "2026-09-28",
-                appointmentTime: "09:30 AM",
-                vehicleNumber: "WP CAB-4589",
-                notes: "Engine Oil Change & Hybrid Battery Check",
-                status: "CONFIRMED"
-            }
-        ],
-        activeJobsList: [
-            {
-                jobCardCode: "JOB-2026-091",
-                vehicleNumber: "WP CAB-4589",
-                checkInTime: "2026-09-20 08:30 AM",
-                status: "IN_PROGRESS"
-            }
-        ],
-        recentJobHistoryList: [
-            {
-                jobCardCode: "JOB-2026-042",
-                vehicleNumber: "WP CAB-4589",
-                checkInTime: "2026-08-12 09:00 AM",
-                checkOutTime: "2026-08-12 04:30 PM",
-                status: "COMPLETED"
-            },
-            {
-                jobCardCode: "JOB-2026-010",
-                vehicleNumber: "WP BZ-1234",
-                checkInTime: "2026-06-05 10:00 AM",
-                checkOutTime: "2026-06-05 02:15 PM",
-                status: "COMPLETED"
-            }
-        ]
-    };
-    renderDashboardData(mockData);
+function showEmptyDashboardError(message) {
+    const kpiTotalVehicles = document.getElementById("kpiTotalVehicles") || document.getElementById("totalVehicles");
+    const kpiActiveJobs = document.getElementById("kpiActiveJobs") || document.getElementById("activeJobs");
+    const kpiCompletedJobs = document.getElementById("kpiCompletedJobs") || document.getElementById("completedJobs");
+    const kpiPendingPayment = document.getElementById("kpiPendingPayment") || document.getElementById("pendingPayment");
+
+    if (kpiTotalVehicles) kpiTotalVehicles.innerText = "0";
+    if (kpiActiveJobs) kpiActiveJobs.innerText = "0";
+    if (kpiCompletedJobs) kpiCompletedJobs.innerText = "0";
+    if (kpiPendingPayment) kpiPendingPayment.innerText = "LKR 0.00";
+
+    const emptyRow = `<tr><td colspan="5" class="text-center text-danger py-3">${message}</td></tr>`;
+
+    const appTable = document.getElementById("approvedAppointmentsTable");
+    const activeTable = document.getElementById("activeJobsTable");
+    const historyTable = document.getElementById("recentHistoryTable");
+
+    if (appTable) appTable.innerHTML = emptyRow;
+    if (activeTable) activeTable.innerHTML = emptyRow;
+    if (historyTable) historyTable.innerHTML = emptyRow;
 }
 
 // Chart.js Visualization Function
-function initCharts() {
-    // 1. Service History Bar Chart
-    const ctxBar = document.getElementById('serviceHistoryChart').getContext('2d');
-    if (serviceHistoryChartInstance) serviceHistoryChartInstance.destroy();
-
-    serviceHistoryChartInstance = new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-            datasets: [{
-                label: 'Services Completed',
-                data: [1, 2, 1, 3, 2, 4],
-                backgroundColor: 'rgba(99, 102, 241, 0.85)',
-                borderColor: '#6366f1',
-                borderWidth: 1,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
-            }
-        }
-    });
-
-    // 2. Service Type Donut Chart
-    const ctxPie = document.getElementById('serviceTypeChart').getContext('2d');
-    if (serviceTypeChartInstance) serviceTypeChartInstance.destroy();
-
-    serviceTypeChartInstance = new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-            labels: ['Full Service', 'Oil Service', 'Engine Repair', 'Body Wash'],
-            datasets: [{
-                data: [50, 20, 20, 10],
-                backgroundColor: ['#6366f1', '#3b82f6', '#f59e0b', '#10b981'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 10, font: { size: 11 } } }
-            },
-            cutout: '70%'
-        }
-    });
-}
+// function initCharts() {
+//     const ctxBar = document.getElementById('serviceHistoryChart')?.getContext('2d');
+//     if (ctxBar) {
+//         if (serviceHistoryChartInstance) serviceHistoryChartInstance.destroy();
+//         serviceHistoryChartInstance = new Chart(ctxBar, {
+//             type: 'bar',
+//             data: {
+//                 labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+//                 datasets: [{
+//                     label: 'Services Completed',
+//                     data: [1, 2, 1, 3, 2, 4],
+//                     backgroundColor: 'rgba(99, 102, 241, 0.85)',
+//                     borderColor: '#6366f1',
+//                     borderWidth: 1,
+//                     borderRadius: 6
+//                 }]
+//             },
+//             options: {
+//                 responsive: true,
+//                 maintainAspectRatio: false,
+//                 plugins: { legend: { display: false } },
+//                 scales: {
+//                     x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+//                     y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
+//                 }
+//             }
+//         });
+//     }
+//
+//     const ctxPie = document.getElementById('serviceTypeChart')?.getContext('2d');
+//     if (ctxPie) {
+//         if (serviceTypeChartInstance) serviceTypeChartInstance.destroy();
+//         serviceTypeChartInstance = new Chart(ctxPie, {
+//             type: 'doughnut',
+//             data: {
+//                 labels: ['Full Service', 'Oil Service', 'Engine Repair', 'Body Wash'],
+//                 datasets: [{
+//                     data: [50, 20, 20, 10],
+//                     backgroundColor: ['#6366f1', '#3b82f6', '#f59e0b', '#10b981'],
+//                     borderWidth: 0
+//                 }]
+//             },
+//             options: {
+//                 responsive: true,
+//                 maintainAspectRatio: false,
+//                 plugins: {
+//                     legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 10, font: { size: 11 } } }
+//                 },
+//                 cutout: '70%'
+//             }
+//         });
+//     }
+// }
 
 // Profile Modal Controller
 function openProfileModal() {
-    document.getElementById("modalUserName").innerText = localStorage.getItem("userName") || "Customer User";
-    document.getElementById("modalUserRole").innerText = localStorage.getItem("userRole") || "CUSTOMER";
-    document.getElementById("modalUserCode").innerText = localStorage.getItem("customerCode") || "CUST-001";
-    document.getElementById("modalUserEmail").innerText = localStorage.getItem("userEmail") || "customer@autocare.com";
-    document.getElementById("modalUserPhone").innerText = localStorage.getItem("userPhone") || "+94 77 123 4567";
+    const modalUserName = document.getElementById("modalUserName");
+    const modalUserRole = document.getElementById("modalUserRole");
+    const modalUserCode = document.getElementById("modalUserCode");
+    const modalUserEmail = document.getElementById("modalUserEmail");
+    const modalUserPhone = document.getElementById("modalUserPhone");
 
-    profileModalInstance.show();
+    const currentCustomerCode = localStorage.getItem("customerCode") || "N/A";
+
+    if (modalUserName) modalUserName.innerText = localStorage.getItem("userName") || localStorage.getItem("username") || "Customer User";
+    if (modalUserRole) modalUserRole.innerText = localStorage.getItem("userRole") || "CUSTOMER";
+    if (modalUserCode) modalUserCode.innerText = currentCustomerCode;
+    if (modalUserEmail) modalUserEmail.innerText = localStorage.getItem("userEmail") || "customer@autocare.com";
+    if (modalUserPhone) modalUserPhone.innerText = localStorage.getItem("userPhone") || "+94 77 123 4567";
+
+    if (profileModalInstance) profileModalInstance.show();
 }
 
-// Sidebar Navigation Handling
 function switchTab(moduleName, event) {
     if (event) event.preventDefault();
 
@@ -241,50 +313,57 @@ function switchTab(moduleName, event) {
     }
 
     const dynamicContent = document.getElementById("dynamicPageContent");
+    const pageIframe = document.getElementById("pageIframe");
+    const kpiRow = document.getElementById("kpiRow");
+    const chartsRow = document.getElementById("chartsRow");
+    const tablesRow = document.getElementById("tablesRow");
+    const historyRow = document.getElementById("historyRow");
 
     if (moduleName === "dashboard") {
-        document.getElementById("kpiRow").classList.remove("d-none");
-        document.getElementById("chartsRow").classList.remove("d-none");
-        document.getElementById("tablesRow").classList.remove("d-none");
-        document.getElementById("historyRow").classList.remove("d-none");
-        dynamicContent.classList.add("d-none");
+        if (kpiRow) kpiRow.classList.remove("d-none");
+        if (chartsRow) chartsRow.classList.remove("d-none");
+        if (tablesRow) tablesRow.classList.remove("d-none");
+        if (historyRow) historyRow.classList.remove("d-none");
+        if (dynamicContent) dynamicContent.classList.add("d-none");
     } else {
-        document.getElementById("kpiRow").classList.add("d-none");
-        document.getElementById("chartsRow").classList.add("d-none");
-        document.getElementById("tablesRow").classList.add("d-none");
-        document.getElementById("historyRow").classList.add("d-none");
-        dynamicContent.classList.remove("d-none");
+        if (kpiRow) kpiRow.classList.add("d-none");
+        if (chartsRow) chartsRow.classList.add("d-none");
+        if (tablesRow) tablesRow.classList.add("d-none");
+        if (historyRow) historyRow.classList.add("d-none");
+        if (dynamicContent) dynamicContent.classList.remove("d-none");
 
-        const titleMap = {
-            'my-vehicles': 'My Vehicles',
-            'vehicle-services': 'Vehicle Services',
-            'track-service': 'Track Service',
-            'track-status': 'Track Vehicle Service Status',
-            'appointments': 'Appointments',
-            'invoices': 'Invoices & Payments'
+        // Dynamic File Mapping
+        const pageMap = {
+            'my-vehicles': 'my_vehicles.html',
+            'vehicle-services': 'service-category-view.html',
+            'track-service': 'job-section-view.html',
+            'track-status': 'job-card-tracker.html',
+            'appointments': 'appointment-booking.html',
+            'invoices': 'invoice-tracker.html'
         };
 
-        document.getElementById("pageTitle").innerText = titleMap[moduleName] || moduleName;
-        document.getElementById("pageDescription").innerText = `Manage your ${titleMap[moduleName] || moduleName} information from this section.`;
+        if (pageIframe && pageMap[moduleName]) {
+            pageIframe.src = pageMap[moduleName];
+        }
     }
 }
 
-// Toggle Mobile Sidebar
 function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("show");
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) sidebar.classList.toggle("show");
 }
 
-// Handle Logout
 function handleLogout() {
     localStorage.clear();
     alert("Logged out successfully!");
-    // window.location.href = "login.html";
+    window.location.href = "../../index.html";
 }
 
-// AI Assistant Toggle & Logic
 function toggleAiChat() {
     const chatWin = document.getElementById("aiChatWindow");
-    chatWin.style.display = (chatWin.style.display === "flex") ? "none" : "flex";
+    if (chatWin) {
+        chatWin.style.display = (chatWin.style.display === "flex") ? "none" : "flex";
+    }
 }
 
 function handleAiKeyPress(event) {
@@ -294,11 +373,11 @@ function handleAiKeyPress(event) {
 function sendAiMessage() {
     const inputField = document.getElementById("aiInputMsg");
     const chatBody = document.getElementById("aiChatBody");
-    const text = inputField.value.trim();
+    if (!inputField || !chatBody) return;
 
+    const text = inputField.value.trim();
     if (!text) return;
 
-    // Append User Message
     const userDiv = document.createElement("div");
     userDiv.className = "chat-msg user";
     userDiv.innerText = text;
@@ -307,7 +386,6 @@ function sendAiMessage() {
     inputField.value = "";
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    // Bot Response Simulation
     setTimeout(() => {
         const botDiv = document.createElement("div");
         botDiv.className = "chat-msg bot";

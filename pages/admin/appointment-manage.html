@@ -26,7 +26,6 @@
     </div>
 
     <!-- Stats & Filters Bar -->
-    <!-- Stats & Filters Bar -->
     <div class="row g-3 mb-4">
         <!-- KPI Card Block -->
         <div class="col-12 col-lg-4">
@@ -42,35 +41,28 @@
         </div>
 
         <!-- Controls Block (Search & Status Filters) -->
-        <div class="col-12 col-lg-8">
-            <div class="panel-card h-100 d-flex flex-column justify-content-center gap-3 py-3 px-3">
-
-                <!-- Row 1: Search Box & Refresh Button -->
-                <div class="row g-2 align-items-center w-100 m-0">
-                    <div class="col-12 col-sm-8 p-0 pe-sm-2">
-                        <div class="custom-search-box">
-                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                            <input type="text" id="serviceSearchInput" class="form-control custom-search-input"
-                                   placeholder="Search services..." onkeyup="filterServicesLocally()">
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-4 p-0 text-sm-end mt-2 mt-sm-0">
-                        <button type="button" class="btn btn-refresh-console w-100" onclick="location.reload()">
-                            <i class="fa-solid fa-rotate me-2"></i>Refresh Console
-                        </button>
-                    </div>
+        <div class="row g-2 align-items-center w-100 m-0">
+            <div class="col-12 col-sm-8 p-0 pe-sm-2">
+                <div class="custom-search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="appointmentSearchInput" class="form-control custom-search-input"
+                           placeholder="Search code, customer or license plate..." onkeyup="filterAppointmentsLocally()">
                 </div>
-
-                <!-- Row 2: Status Filter Badges -->
-                <div class="d-flex align-items-center gap-2 flex-wrap" id="statusFilterContainer">
-                    <button class="btn btn-outline-custom active-filter px-3 py-1 fs-8" onclick="filterByStatus('ALL', this)">ALL</button>
-                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-warning" onclick="filterByStatus('PENDING', this)">PENDING</button>
-                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-info" onclick="filterByStatus('CONFIRMED', this)">CONFIRMED</button>
-                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-success" onclick="filterByStatus('COMPLETED', this)">COMPLETED</button>
-                    <button class="btn btn-outline-custom px-3 py-1 fs-8 text-danger" onclick="filterByStatus('CANCELLED', this)">CANCELLED</button>
-                </div>
-
             </div>
+            <div class="col-12 col-sm-4 p-0 text-sm-end mt-2 mt-sm-0">
+                <button type="button" class="btn btn-refresh-console w-100" onclick="location.reload()">
+                    <i class="fa-solid fa-rotate me-2"></i>Refresh Console
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Filter Badges -->
+        <div class="d-flex align-items-center gap-2 flex-wrap" id="statusFilterContainer">
+            <button class="btn btn-outline-custom active-filter px-3 py-1 fs-8" onclick="filterByStatus('ALL', this)">ALL</button>
+            <button class="btn btn-outline-custom px-3 py-1 fs-8 text-warning" onclick="filterByStatus('PENDING', this)">PENDING</button>
+            <button class="btn btn-outline-custom px-3 py-1 fs-8 text-info" onclick="filterByStatus('CONFIRMED', this)">CONFIRMED</button>
+            <button class="btn btn-outline-custom px-3 py-1 fs-8 text-success" onclick="filterByStatus('COMPLETED', this)">COMPLETED</button>
+            <button class="btn btn-outline-custom px-3 py-1 fs-8 text-danger" onclick="filterByStatus('CANCELLED', this)">CANCELLED</button>
         </div>
     </div>
 
@@ -116,11 +108,13 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="custom-label">Customer Code *</label>
-                            <input type="text" class="form-control custom-input" id="adminUserCode" placeholder="e.g. CUST001" required>
+                            <input type="text" class="form-control custom-input" id="adminUserCode" placeholder="e.g. CUST001" onchange="fetchVehiclesByCustomerCode()" onblur="fetchVehiclesByCustomerCode()" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="custom-label">Vehicle Code *</label>
-                            <input type="text" class="form-control custom-input" id="adminVehicleCode" placeholder="e.g. VEH001" required>
+                            <label class="custom-label">Select Vehicle *</label>
+                            <select class="form-select custom-input" id="adminVehicleCode" required>
+                                <option value="">-- Select Vehicle --</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="custom-label">Appointment Date *</label>
@@ -130,11 +124,16 @@
                             <label class="custom-label">Appointment Time *</label>
                             <input type="time" class="form-control custom-input" id="adminTime" required>
                         </div>
+
+                        <!-- Dynamic Services Selection Box -->
                         <div class="col-12">
-                            <label class="custom-label">Service Codes (Comma Separated) *</label>
-                            <input type="text" class="form-control custom-input" id="adminServiceCodes" placeholder="SRV001, SRV002" required>
-                            <div class="text-muted fs-8 mt-1">Separate multiple codes using commas.</div>
+                            <label class="custom-label">Select Services *</label>
+                            <div id="servicesCheckboxContainer" class="p-3 rounded border" style="background: rgba(255, 255, 255, 0.03); border-color: var(--border-color) !important; max-height: 180px; overflow-y: auto;">
+                                <div class="text-muted fs-8"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading services...</div>
+                            </div>
+                            <div class="text-muted fs-8 mt-1">Select one or multiple services.</div>
                         </div>
+
                         <div class="col-12">
                             <label class="custom-label">Special Notes</label>
                             <input type="text" class="form-control custom-input" id="adminSpecialNotes" placeholder="Additional details or instructions">

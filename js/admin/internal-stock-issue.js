@@ -1,5 +1,6 @@
 const BASE_URL = "http://localhost:8080/api/v1/internal-stock-issue";
 const SPARE_PART_API = "http://localhost:8080/api/v1/spare-part";
+const EMPLOYEE_API = "http://localhost:8080/api/v1/employee";
 
 document.addEventListener("DOMContentLoaded", () => {
     applyRoleSecurity();
@@ -7,17 +8,28 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAllInternalIssues();
 });
 
-// Role Isolation Logic (ADMIN vs ADVISOR / MECHANIC)
+// Back to Spare Parts Inventory Navigation Function
+function navigateToInventory() {
+    const dynamicModal = document.getElementById("dynamicContainerModal");
+    if (dynamicModal && bootstrap.Modal.getInstance(dynamicModal)) {
+        bootstrap.Modal.getInstance(dynamicModal).hide();
+    } else {
+        window.location.href = "spare-part-manage.html";
+    }
+}
+
+// Role Isolation Logic (ADMIN vs ADVISOR)
 function applyRoleSecurity() {
-    const role = localStorage.getItem("userRole");
+    const role = (localStorage.getItem("userRole") || "ADVISOR").toUpperCase();
     if (role !== "ADMIN") {
         document.querySelectorAll('.admin-only-action').forEach(el => el.style.setProperty('display', 'none', 'important'));
     }
 }
 
 function getAuthHeaders() {
+    const token = localStorage.getItem("jwtToken");
     return {
-        "Authorization": `Bearer ${localStorage.getItem("userToken")}`,
+        "Authorization": token ? `Bearer ${token}` : '',
         "Content-Type": "application/json"
     };
 }
@@ -27,8 +39,8 @@ async function loadTotalCount() {
     try {
         const response = await fetch(`${BASE_URL}/count`, { headers: getAuthHeaders() });
         const result = await response.json();
-        if (result.code === 200) {
-            document.getElementById("totalIssuesCount").innerText = result.data;
+        if (result.code === 200 || result.status === 200) {
+            document.getElementById("totalIssuesCount").innerText = result.data ?? result.body ?? 0;
         }
     } catch (e) {
         console.error("Failed to fetch total count", e);
@@ -37,7 +49,9 @@ async function loadTotalCount() {
 
 // Fetch all internal stock issues
 async function loadAllInternalIssues() {
-    document.getElementById("issueSearchInput").value = "";
+    const searchInput = document.getElementById("issueSearchInput");
+    if (searchInput) searchInput.value = "";
+
     const tbody = document.getElementById("internalIssueTableBody");
     tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-5 fs-7"><i class="fa-solid fa-circle-notch fa-spin me-2"></i>Loading internal stock issue records...</td></tr>`;
 
@@ -45,8 +59,8 @@ async function loadAllInternalIssues() {
         const response = await fetch(`${BASE_URL}/get-all`, { headers: getAuthHeaders() });
         const result = await response.json();
 
-        if (result.code === 200 && result.data) {
-            renderIssueRows(result.data);
+        if ((result.code === 200 || result.status === 200) && (result.data || result.body)) {
+            renderIssueRows(result.data || result.body);
         } else {
             tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No internal stock issues found.</td></tr>`;
         }
@@ -73,7 +87,7 @@ function renderIssueRows(issues) {
             </td>
             <td>
                 <span class="text-white fw-semibold">${item.employeeName || 'N/A'}</span>
-                <small class="text-muted d-block">${item.employeeCode}</small>
+                <small class="text-muted d-block">${item.employeeCode || ''}</small>
             </td>
             <td><span class="badge bg-secondary">${item.sectionName || item.sectionCode || 'N/A'}</span></td>
             <td class="fw-bold text-white">${item.quantity}</td>
@@ -90,32 +104,68 @@ function renderIssueRows(issues) {
     `).join('');
 }
 
-// Open Form Modal & Populate Available Parts
+// Open Form Modal & Populate Parts, Employees, and Sections (ADMIN Only)
 async function openIssueStockModal() {
     document.getElementById("issueStockForm").reset();
-    const partSelect = document.getElementById("partId");
-    partSelect.innerHTML = `<option value="" selected disabled>Loading available spare parts...</option>`;
 
-    new bootstrap.Modal(document.getElementById("issueStockModal")).show();
+    const partSelect = document.getElementById("partId");
+    const employeeSelect = document.getElementById("employeeCode");
+    const sectionSelect = document.getElementById("sectionCode");
+
+    partSelect.innerHTML = `<option value="" selected disabled>Loading spare parts...</option>`;
+    employeeSelect.innerHTML = `<option value="" selected disabled>Loading employees...</option>`;
+    sectionSelect.innerHTML = `<option value="" selected disabled>Loading sections...</option>`;
+
+    const modalEl = document.getElementById("issueStockModal");
+    if (modalEl) {
+        new bootstrap.Modal(modalEl).show();
+    }
 
     try {
-        const res = await fetch(`${SPARE_PART_API}/get-all`, { headers: getAuthHeaders() });
-        const result = await res.json();
-        if (result.code === 200 && result.data) {
+        // 1. Fetch Spare Parts
+        const partRes = await fetch(`${SPARE_PART_API}/get-all`, { headers: getAuthHeaders() });
+        const partResult = await partRes.json();
+        const partsList = partResult.data || partResult.body;
+        if (partRes.ok && partsList) {
             partSelect.innerHTML = `<option value="" selected disabled>Select Spare Part</option>` +
-                result.data.map(p => `<option value="${p.partId}">${p.partName} (${p.partCode}) - Available Stock: ${p.quantityInStock}</option>`).join('');
+                partsList.map(p => `<option value="${p.partId}">${p.partName} (${p.partCode}) - Stock: ${p.quantityInStock}</option>`).join('');
+        } else {
+            partSelect.innerHTML = `<option value="" selected disabled>Failed to load parts</option>`;
         }
+
+        // 2. Fetch Employees
+        const empRes = await fetch(`${EMPLOYEE_API}/get-all-employee`, { headers: getAuthHeaders() });
+        const empResult = await empRes.json();
+        const empList = empResult.data || empResult.body;
+        if (empRes.ok && empList) {
+            employeeSelect.innerHTML = `<option value="" selected disabled>Select Employee</option>` +
+                empList.map(e => `<option value="${e.employeeCode}">${e.employeeName} (${e.employeeCode})</option>`).join('');
+        } else {
+            employeeSelect.innerHTML = `<option value="" selected disabled>Failed to load employees</option>`;
+        }
+
+        sectionSelect.innerHTML = `
+            <option value="" selected disabled>Select Section</option>
+            <option value="INTERIOR_SECTION">Interior Section</option>
+            <option value="WASHING_SECTION">Washing Section</option>
+        `;
+
     } catch (e) {
-        partSelect.innerHTML = `<option value="" selected disabled>Failed to load spare parts</option>`;
+        console.error("Error loading dropdown data:", e);
+        sectionSelect.innerHTML = `
+            <option value="" selected disabled>Select Section</option>
+            <option value="INTERIOR_SECTION">Interior Section</option>
+            <option value="WASHING_SECTION">Washing Section</option>
+        `;
     }
 }
 
-// Submit Issue Request (ADMIN Action)
+// Submit Issue Request (ADMIN)
 async function submitInternalStockIssue() {
     const payload = {
         partId: parseInt(document.getElementById("partId").value),
-        employeeCode: document.getElementById("employeeCode").value.trim(),
-        sectionCode: document.getElementById("sectionCode").value.trim() || null,
+        employeeCode: document.getElementById("employeeCode").value,
+        sectionCode: document.getElementById("sectionCode").value || null,
         quantity: parseInt(document.getElementById("quantity").value),
         usageReason: document.getElementById("usageReason").value.trim()
     };
@@ -133,7 +183,8 @@ async function submitInternalStockIssue() {
         });
         const result = await res.json();
 
-        if (res.ok || result.code === 201) {
+        if (res.ok || result.code === 201 || result.status === 201) {
+            alert(result.message || "Internal stock issued successfully!");
             bootstrap.Modal.getInstance(document.getElementById("issueStockModal")).hide();
             loadTotalCount();
             loadAllInternalIssues();
@@ -150,9 +201,9 @@ async function viewIssueDetail(code) {
     try {
         const res = await fetch(`${BASE_URL}/get-by-code/${code}`, { headers: getAuthHeaders() });
         const result = await res.json();
+        const data = result.data || result.body;
 
-        if (result.code === 200 && result.data) {
-            const data = result.data;
+        if ((result.code === 200 || result.status === 200) && data) {
             document.getElementById("viewDetailModalBody").innerHTML = `
                 <div class="row g-3 fs-7">
                     <div class="col-6"><span class="text-muted d-block">Issue Code:</span><strong class="text-white">${data.internalPartCode}</strong></div>

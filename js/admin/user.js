@@ -2,8 +2,10 @@ const BASE_URL = "http://localhost:8080/api/v1/user";
 
 let userFormModal;
 let userProfileModal;
+let currentStatus = "ACTIVE";
 
 document.addEventListener("DOMContentLoaded", function() {
+
     const userModalEl = document.getElementById('userFormModal');
     const profileModalEl = document.getElementById('userProfileModal');
 
@@ -11,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (profileModalEl) userProfileModal = new bootstrap.Modal(profileModalEl);
 
     loadTotalUsersCount();
-    loadAllActiveUsers();
+    loadUsersByStatus(currentStatus);
     loadLoggedInUserDetail();
 });
 
@@ -23,57 +25,147 @@ function getAuthHeader() {
     };
 }
 
+function extractData(result) {
+    if (!result) return null;
+
+    if (result.body !== undefined) {
+        return result.body;
+    }
+    if (result.data !== undefined) {
+        return result.data;
+    }
+    return result;
+}
+
+
 async function loadTotalUsersCount() {
     try {
         const response = await fetch(`${BASE_URL}/count`, { headers: getAuthHeader() });
         const result = await response.json();
-        if (response.ok && result.code === 200) {
-            document.getElementById('statTotalUsers').innerText = result.data;
+
+        if (response.ok) {
+            let countVal = extractData(result);
+
+            if (typeof countVal === 'object' && countVal !== null) {
+                countVal = countVal.count || countVal.total || Object.values(countVal)[0] || 0;
+            }
+
+            document.getElementById('statTotalUsers').innerText = (countVal !== null && countVal !== undefined) ? countVal : 0;
+        } else {
+            console.warn("Count response info:", result);
+            document.getElementById('statTotalUsers').innerText = 0;
         }
     } catch (e) {
         console.error("Count fetch error:", e);
+        document.getElementById('statTotalUsers').innerText = 0;
     }
 }
 
-async function loadAllActiveUsers() {
+async function loadUsersByStatus(status) {
+    currentStatus = status || 'ACTIVE';
     try {
-        const response = await fetch(`${BASE_URL}/getAllActiveUsers`, { headers: getAuthHeader() });
+        let endpoint = `${BASE_URL}/getUsersByStatus/${currentStatus}`;
+
+        // Backward compatibility for ACTIVE users
+        if (currentStatus === 'ACTIVE') {
+            endpoint = `${BASE_URL}/getAllActiveUsers`;
+        }
+
+        const response = await fetch(endpoint, { headers: getAuthHeader() });
         const result = await response.json();
-        if (response.ok && result.code === 200) {
-            renderUserTable(result.data);
-            document.getElementById('statActiveUsers').innerText = result.data.length;
+
+        console.log(`Users Response [Status: ${currentStatus}]:`, result);
+
+        if (response.ok) {
+            let userList = extractData(result);
+
+            if (!Array.isArray(userList) && typeof userList === 'object' && userList !== null) {
+                userList = userList.content || userList.list || Object.values(userList);
+            }
+
+            if (Array.isArray(userList)) {
+                renderUserTable(userList);
+                document.getElementById('statActiveUsers').innerText = userList.length;
+            } else {
+                renderUserTable([]);
+                document.getElementById('statActiveUsers').innerText = 0;
+            }
+        } else {
+            console.warn("Users fetch info:", result);
+            renderUserTable([]);
+            document.getElementById('statActiveUsers').innerText = 0;
         }
     } catch (e) {
-        console.error("Active users fetch error:", e);
+        console.error("Users fetch error:", e);
+        renderUserTable([]);
+        document.getElementById('statActiveUsers').innerText = 0;
     }
+}
+
+function refreshConsole() {
+    loadTotalUsersCount();
+    loadUsersByStatus(currentStatus);
 }
 
 function renderUserTable(users) {
     const tbody = document.getElementById('userTableBody');
+    if (!tbody) return;
+
     tbody.innerHTML = "";
 
-    if (!users || users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-secondary">No active users found.</td></tr>`;
+    if (!users || !Array.isArray(users) || users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-secondary">No ${currentStatus.toLowerCase()} users found.</td></tr>`;
         return;
     }
 
     users.forEach(user => {
+        const code = user.userCode || user.user_code || user.code || 'N/A';
+        const name = user.username || user.userName || user.name || 'N/A';
+        const email = user.email || 'N/A';
+        const phone = user.phone || 'N/A';
+        const nic = user.nicPassport || user.nic || user.nic_passport || 'N/A';
+        const role = user.role || 'ADVISOR';
+        const status = user.status || 'ACTIVE';
+        const address = user.address || '';
+
         const tr = document.createElement('tr');
+
+        const safeCode = String(code).replace(/'/g, "\\'");
+        const safeName = String(name).replace(/'/g, "\\'");
+        const safeEmail = String(email).replace(/'/g, "\\'");
+        const safePhone = String(phone).replace(/'/g, "\\'");
+        const safeNic = String(nic).replace(/'/g, "\\'");
+        const safeRole = String(role).replace(/'/g, "\\'");
+        const safeAddr = String(address).replace(/'/g, "\\'");
+
+        let statusBadge = `<span class="badge bg-success-subtle text-success px-2 py-1">ACTIVE</span>`;
+        if (status === 'PENDING') {
+            statusBadge = `<span class="badge bg-warning-subtle text-warning px-2 py-1">PENDING</span>`;
+        } else if (status === 'INACTIVE') {
+            statusBadge = `<span class="badge bg-danger-subtle text-danger px-2 py-1">INACTIVE</span>`;
+        }
+
         tr.innerHTML = `
-            <td class="fw-bold text-indigo">${user.userCode || 'N/A'}</td>
-            <td><div class="fw-bold text-white">${user.username}</div></td>
+            <td class="fw-bold text-indigo">${code}</td>
+            <td><div class="fw-bold text-white">${name}</div></td>
             <td>
-                <div class="fs-7 text-white">${user.email}</div>
-                <div class="fs-8 text-secondary">${user.phone}</div>
+                <div class="fs-7 text-white">${email}</div>
+                <div class="fs-8 text-secondary">${phone}</div>
             </td>
-            <td>${user.nicPassport || 'N/A'}</td>
-            <td><span class="role-badge">${user.role}</span></td>
-            <td><span class="badge bg-success-subtle text-success px-2 py-1">${user.status || 'ACTIVE'}</span></td>
+            <td>${nic}</td>
+            <td><span class="role-badge">${role}</span></td>
+            <td>${statusBadge}</td>
             <td class="text-end">
-                <button class="btn btn-sm btn-dark-panel me-1" title="Edit" onclick="openEditUserModal('${user.userCode}', '${user.username}', '${user.email}', '${user.phone}', '${user.nicPassport}', '${user.role}', '${user.address}')">
+                ${status === 'PENDING' ? `
+                    <button class="btn btn-sm btn-success me-1" title="Approve & Activate Customer" onclick="activateCustomer('${safeCode}')">
+                        <i class="fa-solid fa-user-check me-1"></i> Approve
+                    </button>
+                ` : ''}
+                <button class="btn btn-sm btn-dark-panel me-1" title="Edit" 
+                    onclick="openEditUserModal('${safeCode}', '${safeName}', '${safeEmail}', '${safePhone}', '${safeNic}', '${safeRole}', '${safeAddr}')">
                     <i class="fa-solid fa-pen-to-square"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteUser('${user.userCode}')">
+                <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteUser('${safeCode}')">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </td>
@@ -82,10 +174,40 @@ function renderUserTable(users) {
     });
 }
 
+async function activateCustomer(userCode) {
+    if (!userCode || userCode === 'N/A') {
+        alert("Invalid User Code!");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to approve and activate account ${userCode}?`)) return;
+
+    try {
+        const response = await fetch(`${BASE_URL}/activate-customer/${userCode}`, {
+            method: 'PATCH',
+            headers: getAuthHeader()
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(result.message || "Customer account activated successfully!");
+            loadUsersByStatus(currentStatus);
+            loadTotalUsersCount();
+        } else {
+            alert(result.message || "Failed to activate customer account!");
+        }
+    } catch (e) {
+        console.error("Activation error:", e);
+        alert("Server communication error during activation!");
+    }
+}
+
+
 async function handleSearch() {
     const query = document.getElementById('searchInput').value.trim();
     if (!query) {
-        loadAllActiveUsers();
+        loadUsersByStatus(currentStatus);
         return;
     }
 
@@ -94,8 +216,10 @@ async function handleSearch() {
             headers: getAuthHeader()
         });
         const result = await response.json();
-        if (response.ok && result.code === 200) {
-            renderUserTable(result.data);
+
+        if (response.ok) {
+            const data = extractData(result);
+            renderUserTable(Array.isArray(data) ? data : []);
         }
     } catch (e) {
         console.error("Filter error:", e);
@@ -113,7 +237,7 @@ function openCreateUserModal(type) {
         document.getElementById('formRole').value = "ADMIN";
     } else {
         document.getElementById('userModalTitle').innerText = "Create Staff Account";
-        document.getElementById('formRole').value = "MANAGER";
+        document.getElementById('formRole').value = "ADVISOR";
     }
 
     if (userFormModal) userFormModal.show();
@@ -128,9 +252,9 @@ function openEditUserModal(userCode, username, email, phone, nic, role, address)
     document.getElementById('formUsername').value = username;
     document.getElementById('formEmail').value = email;
     document.getElementById('formPhone').value = phone;
-    document.getElementById('formNic').value = nic;
+    document.getElementById('formNic').value = (nic && nic !== 'undefined' && nic !== 'null') ? nic : '';
     document.getElementById('formRole').value = role;
-    document.getElementById('formAddress').value = address;
+    document.getElementById('formAddress').value = (address && address !== 'undefined' && address !== 'null') ? address : '';
 
     document.getElementById('passwordContainer').style.display = "none";
     document.getElementById('formPassword').required = false;
@@ -146,7 +270,7 @@ document.getElementById('userModalForm').addEventListener('submit', async functi
 
     const requestData = {
         username: document.getElementById('formUsername').value,
-        password: document.getElementById('formPassword').value || "123456",
+        password: document.getElementById('formPassword').value || undefined,
         email: document.getElementById('formEmail').value,
         phone: document.getElementById('formPhone').value,
         nicPassport: document.getElementById('formNic').value,
@@ -173,20 +297,27 @@ document.getElementById('userModalForm').addEventListener('submit', async functi
         });
 
         const result = await response.json();
-        if (response.ok && (result.code === 200 || result.code === 201)) {
+
+        if (response.ok) {
             if (userFormModal) userFormModal.hide();
-            loadAllActiveUsers();
+            loadUsersByStatus(currentStatus);
             loadTotalUsersCount();
             alert(result.message || "Operation successful!");
         } else {
             alert(result.message || "Operation failed!");
         }
     } catch (e) {
+        console.error("Save error:", e);
         alert("Server communication error!");
     }
 });
 
 async function deleteUser(userCode) {
+    if (!userCode || userCode === 'N/A') {
+        alert("Invalid User Code!");
+        return;
+    }
+
     if (!confirm(`Are you sure you want to delete user ${userCode}?`)) return;
 
     try {
@@ -196,36 +327,51 @@ async function deleteUser(userCode) {
         });
 
         const result = await response.json();
-        if (response.ok && result.code === 200) {
-            loadAllActiveUsers();
+
+        if (response.ok) {
+            loadUsersByStatus(currentStatus);
             loadTotalUsersCount();
             alert("User deleted successfully!");
         } else {
             alert(result.message || "Failed to delete user!");
         }
     } catch (e) {
+        console.error("Delete error:", e);
         alert("Server error during deletion!");
     }
 }
 
 async function loadLoggedInUserDetail() {
-    const loggedInUsername = localStorage.getItem("loggedInUsername") || "admin";
+    const loggedInUsername = localStorage.getItem("loggedInUsername");
+
+    if (!loggedInUsername) return;
 
     try {
         const response = await fetch(`${BASE_URL}/get-user/${loggedInUsername}`, { headers: getAuthHeader() });
         const result = await response.json();
-        if (response.ok && result.code === 200) {
-            const u = result.data;
-            document.getElementById('navUsername').innerText = u.username;
-            document.getElementById('navUserRole').innerText = u.role;
 
-            document.getElementById('profileUsername').innerText = u.username;
-            document.getElementById('profileRole').innerText = u.role;
-            document.getElementById('profileCode').innerText = u.userCode || 'N/A';
-            document.getElementById('profileEmail').innerText = u.email || 'N/A';
-            document.getElementById('profilePhone').innerText = u.phone || 'N/A';
-            document.getElementById('profileNic').innerText = u.nicPassport || 'N/A';
-            document.getElementById('profileAddress').innerText = u.address || 'N/A';
+        if (response.ok) {
+            const u = extractData(result);
+            if (u) {
+                const name = u.username || u.userName || 'Admin';
+                const role = u.role || 'ADMINISTRATOR';
+                const code = u.userCode || u.user_code || 'N/A';
+                const email = u.email || 'N/A';
+                const phone = u.phone || 'N/A';
+                const nic = u.nicPassport || u.nic || 'N/A';
+                const address = u.address || 'N/A';
+
+                if (document.getElementById('navUsername')) document.getElementById('navUsername').innerText = name;
+                if (document.getElementById('navUserRole')) document.getElementById('navUserRole').innerText = role;
+
+                if (document.getElementById('profileUsername')) document.getElementById('profileUsername').innerText = name;
+                if (document.getElementById('profileRole')) document.getElementById('profileRole').innerText = role;
+                if (document.getElementById('profileCode')) document.getElementById('profileCode').innerText = code;
+                if (document.getElementById('profileEmail')) document.getElementById('profileEmail').innerText = email;
+                if (document.getElementById('profilePhone')) document.getElementById('profilePhone').innerText = phone;
+                if (document.getElementById('profileNic')) document.getElementById('profileNic').innerText = nic;
+                if (document.getElementById('profileAddress')) document.getElementById('profileAddress').innerText = address;
+            }
         }
     } catch (e) {
         console.error("Profile detail fetch error:", e);

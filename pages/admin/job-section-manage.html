@@ -90,8 +90,10 @@
             <div class="modal-body py-4">
                 <form id="assignSectionForm">
                     <div class="mb-3">
-                        <label class="custom-label">Job Card Code *</label>
-                        <input type="text" class="form-control custom-input" id="assignJobCardCode" placeholder="e.g. JC-1002" required>
+                        <label class="form-label">JOB CARD CODE *</label>
+                        <select id="jobCardCodeSelect" class="form-select custom-search-input" required>
+                            <option value="" selected disabled>Select In-Progress Job Card</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="custom-label">Assigned By User ID *</label>
@@ -102,15 +104,10 @@
                         <input type="number" class="form-control custom-input" id="assignMechanicId" placeholder="e.g. 5" required>
                     </div>
                     <div class="mb-3">
-                        <label class="custom-label">Section Name *</label>
                         <select class="form-select custom-input" id="assignSectionName" required>
                             <option value="" selected disabled>Select Section</option>
-                            <option value="ENGINE_REPAIR">Engine Repair</option>
-                            <option value="ELECTRICAL">Electrical & Wiring</option>
-                            <option value="PAINT_BODY">Paint & Body Work</option>
-                            <option value="WHEEL_ALIGNMENT">Wheel Alignment</option>
-                            <option value="WASH_DETAILING">Wash & Detailing</option>
-                            <option value="GENERAL_SERVICE">General Service</option>
+                            <option value="WASHING_SECTION">Washing Section</option>
+                            <option value="INTERIOR_SECTION">Interior Section</option>
                         </select>
                     </div>
                     <div class="mb-3">

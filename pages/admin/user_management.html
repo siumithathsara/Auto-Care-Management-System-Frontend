@@ -15,31 +15,31 @@
 </head>
 <body class="um-app">
 
- Top Navigation Console
-<header class="um-navbar">
-    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-3">
-            <div class="app-brand-icon">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <div>
-                <h5 class="fw-bold mb-0 text-white">AutoCare Command</h5>
-                <span class="fs-8 text-indigo">USER MANAGEMENT SYSTEM</span>
-            </div>
-        </div>
+<!-- Top Navigation Console -->
+<!--<header class="um-navbar">-->
+<!--    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">-->
+<!--        <div class="d-flex align-items-center gap-3">-->
+<!--            <div class="app-brand-icon">-->
+<!--                <i class="fa-solid fa-shield-halved"></i>-->
+<!--            </div>-->
+<!--            <div>-->
+<!--                <h5 class="fw-bold mb-0 text-white">AutoCare Command</h5>-->
+<!--                <span class="fs-8 text-indigo">USER MANAGEMENT SYSTEM</span>-->
+<!--            </div>-->
+<!--        </div>-->
 
-        <!-- Profile Widget -->
-        <div class="profile-widget" onclick="openLoggedUserProfile()" title="Click to view logged user profile">
-            <div class="profile-avatar">
-                <i class="fa-solid fa-user-gear"></i>
-            </div>
-            <div class="d-none d-md-block">
-                <div class="fw-bold fs-7 text-white" id="navUsername">System Admin</div>
-                <div class="fs-8 text-indigo fw-semibold" id="navUserRole">ADMINISTRATOR</div>
-            </div>
-        </div>
-    </div>
-</header>
+<!--        &lt;!&ndash; Profile Widget &ndash;&gt;-->
+<!--        <div class="profile-widget" onclick="openLoggedUserProfile()" title="Click to view logged user profile">-->
+<!--            <div class="profile-avatar">-->
+<!--                <i class="fa-solid fa-user-gear"></i>-->
+<!--            </div>-->
+<!--            <div class="d-none d-md-block">-->
+<!--                <div class="fw-bold fs-7 text-white" id="navUsername">System Admin</div>-->
+<!--                <div class="fs-8 text-indigo fw-semibold" id="navUserRole">ADMINISTRATOR</div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</header>-->
 
 <!-- Main Container -->
 <div class="container-fluid px-4 py-4">
@@ -48,13 +48,13 @@
     <div class="row align-items-center mb-4 g-3">
         <div class="col-12 col-md-6">
             <h3 class="fw-extrabold text-white mb-1">User Directory</h3>
-            <p class="text-secondary mb-0 fs-7">Manage role permissions, add staff members, and track user status.</p>
+            <p class="text-secondary mb-0 fs-7">Manage role permissions, approve customer requests, add staff members, and track user status.</p>
         </div>
         <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
-            <button class="btn btn-outline-indigo" data-bs-toggle="modal" data-bs-target="#userFormModal" onclick="openCreateUserModal('STAFF')">
+            <button class="btn btn-outline-indigo" onclick="openCreateUserModal('STAFF')">
                 <i class="fa-solid fa-user-plus me-2"></i>+ Add Staff
             </button>
-            <button class="btn btn-indigo" data-bs-toggle="modal" data-bs-target="#userFormModal" onclick="openCreateUserModal('ADMIN')">
+            <button class="btn btn-indigo" onclick="openCreateUserModal('ADMIN')">
                 <i class="fa-solid fa-user-shield me-2"></i>+ Add Admin
             </button>
         </div>
@@ -76,7 +76,7 @@
         <div class="col-12 col-sm-6 col-lg-4">
             <div class="kpi-card">
                 <div class="kpi-body">
-                    <span class="kpi-title">ACTIVE ACCOUNTS</span>
+                    <span class="kpi-title">FILTERED ACCOUNTS</span>
                     <h2 class="kpi-value text-emerald" id="statActiveUsers">0</h2>
                 </div>
                 <div class="kpi-badge kpi-emerald">
@@ -88,7 +88,7 @@
             <div class="kpi-card">
                 <div class="kpi-body">
                     <span class="kpi-title">SUPPORTED ROLES</span>
-                    <h6 class="text-white mt-2 mb-0 fw-bold">ADMIN / MANAGER / ADVISOR / SUPERVISOR</h6>
+                    <h6 class="text-white mt-2 mb-0 fw-bold">ADMIN / ADVISOR / CUSTOMER</h6>
                 </div>
                 <div class="kpi-badge kpi-purple">
                     <i class="fa-solid fa-id-badge"></i>
@@ -100,14 +100,30 @@
     <!-- Filter & Search Panel -->
     <div class="panel-card mb-4 p-3">
         <div class="row g-3 align-items-center">
-            <div class="col-12 col-md-8">
+            <!-- Search Input -->
+            <div class="col-12 col-md-5">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search by username..." oninput="handleSearch()">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by username..." onkeyup="handleSearch()">
                 </div>
             </div>
-            <div class="col-12 col-md-4 text-md-end">
-                <button class="btn btn-dark-panel w-100 w-md-auto" onclick="loadAllActiveUsers()">
+
+            <!-- Status Filter Dropdown -->
+            <div class="col-12 col-md-4">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="text-white fs-7 fw-semibold text-nowrap">Status:</label>
+                    <select id="statusFilterSelect" class="form-select bg-dark text-white border-secondary" onchange="loadUsersByStatus(this.value)">
+                        <option value="ALL">All Statuses</option>
+                        <option value="ACTIVE" selected>Active Users</option>
+                        <option value="PENDING">Pending Approval</option>
+                        <option value="INACTIVE">Inactive Users</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Refresh Button -->
+            <div class="col-12 col-md-3 text-md-end">
+                <button class="btn btn-dark-panel w-100" onclick="refreshConsole()">
                     <i class="fa-solid fa-rotate me-2"></i>Refresh Console
                 </button>
             </div>
@@ -179,9 +195,8 @@
                             <label class="custom-label">System Role</label>
                             <select id="formRole" class="form-select custom-input" required>
                                 <option value="ADMIN">ADMIN</option>
-                                <option value="MANAGER">MANAGER</option>
                                 <option value="ADVISOR">ADVISOR</option>
-                                <option value="SUPERVISOR">SUPERVISOR</option>
+                                <option value="CUSTOMER">CUSTOMER</option>
                             </select>
                         </div>
                         <div class="col-12">

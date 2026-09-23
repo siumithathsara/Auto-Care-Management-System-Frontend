@@ -1,6 +1,5 @@
 const BASE_URL = "http://localhost:8080/api/v1";
 
-// Toggle between Login and Sign Up UI Views
 function toggleAuth(view) {
     const loginSec = document.getElementById('loginSection');
     const signupSec = document.getElementById('signupSection');
@@ -52,7 +51,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             let token = "";
             let role = "CUSTOMER";
 
-            // CHANGED HERE: Backend එකෙන් result.body, result.data හෝ කෙලින්ම result තුළ role සහ token තිබේදැයි පරීක්ෂා කිරීම
             const resBody = result.body || result.data || result;
 
             if (typeof resBody === 'object' && resBody !== null) {
@@ -66,7 +64,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 }
             }
 
-            // Fallback: Role එක හමු නොවූයේ නම් සහ username එකේ admin ඇතුළත් නම්
+
             if ((!role || role === "CUSTOMER") && (enteredUsername.toLowerCase() === "admin" || enteredUsername.toLowerCase().includes("admin"))) {
                 role = "ADMIN";
             }
@@ -78,7 +76,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             localStorage.setItem("userRole", role);
             localStorage.setItem("username", authData.username);
 
-            // Dashboard එකට Redirect කිරීම
+
             setTimeout(() => {
                 const upperRole = role ? role.toString().toUpperCase() : "";
                 console.log("Processed Role for Redirect:", upperRole);
@@ -101,7 +99,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
-// Customer Registration Event Listener (Connects to UserController: /api/v1/user/register-customer)
 document.getElementById('signupForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     hideAlert();

@@ -2,10 +2,31 @@ const BASE_URL = "http://localhost:8080/api/v1/job-card-part";
 
 document.addEventListener("DOMContentLoaded", () => {
     applyRoleSecurity();
-    loadPendingRequests();
+    const role = localStorage.getItem("userRole");
+
+    if (role === "ADMIN") {
+        loadPendingRequests();
+    } else {
+        document.getElementById("jobCardPartTableBody").innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted py-5 fs-7">
+                    Please enter a Job Card Code above and click Search to view parts.
+                </td>
+            </tr>`;
+    }
 });
 
-// Role Isolation Logic (ADMIN vs ADVISOR)
+// Back to Spare Parts Inventory Function
+function navigateToInventory() {
+
+    const dynamicModal = document.getElementById("dynamicContainerModal");
+    if (dynamicModal && bootstrap.Modal.getInstance(dynamicModal)) {
+        bootstrap.Modal.getInstance(dynamicModal).hide();
+    } else {
+        window.location.href = "spare-part-manage.html";
+    }
+}
+
 function applyRoleSecurity() {
     const role = localStorage.getItem("userRole");
     if (role !== "ADMIN") {
@@ -15,12 +36,11 @@ function applyRoleSecurity() {
 
 function getAuthHeaders() {
     return {
-        "Authorization": `Bearer ${localStorage.getItem("userToken")}`,
+        "Authorization": `Bearer ${localStorage.getItem("userToken") || localStorage.getItem("jwtToken")}`,
         "Content-Type": "application/json"
     };
 }
 
-// GET /pending-requests (ADMIN ONLY)
 async function loadPendingRequests() {
     document.getElementById("jobCardPartSearchInput").value = "";
     document.getElementById("jobCardCodeInput").value = "";
@@ -32,19 +52,23 @@ async function loadPendingRequests() {
         const response = await fetch(`${BASE_URL}/pending-requests`, { headers: getAuthHeaders() });
         const result = await response.json();
 
-        if (result.code === 200 && result.data) {
-            document.getElementById("pendingRequestsCount").innerText = result.data.length;
-            renderJobCardPartRows(result.data);
+        console.log("Pending Requests Response:", result);
+
+        const items = result.body || result.data || (Array.isArray(result) ? result : (result.content || []));
+
+        if (response.ok && items.length > 0) {
+            document.getElementById("pendingRequestsCount").innerText = items.length;
+            renderJobCardPartRows(items);
         } else {
             document.getElementById("pendingRequestsCount").innerText = "0";
             tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No pending part requests found.</td></tr>`;
         }
     } catch (e) {
+        console.error("Error loading pending requests:", e);
         tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Failed to load requests from server.</td></tr>`;
     }
 }
 
-// GET /get-by-job-card/{jobCardCode} (ADMIN & ADVISOR)
 async function fetchPartsByJobCard() {
     const code = document.getElementById("jobCardCodeInput").value.trim();
     if (!code) {
@@ -59,17 +83,21 @@ async function fetchPartsByJobCard() {
         const response = await fetch(`${BASE_URL}/get-by-job-card/${code}`, { headers: getAuthHeaders() });
         const result = await response.json();
 
-        if (result.code === 200 && result.data) {
-            renderJobCardPartRows(result.data);
+        console.log("Job Card Parts Response:", result);
+
+        const items = result.body || result.data || (Array.isArray(result) ? result : (result.content || []));
+
+        if (response.ok && items.length > 0) {
+            renderJobCardPartRows(items);
         } else {
             tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No parts found for Job Card: ${code}</td></tr>`;
         }
     } catch (e) {
+        console.error("Error fetching parts by job card:", e);
         tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error fetching parts for specified Job Card.</td></tr>`;
     }
 }
 
-// Render Rows into Data Table
 function renderJobCardPartRows(items) {
     const tbody = document.getElementById("jobCardPartTableBody");
     const role = localStorage.getItem("userRole");
@@ -94,19 +122,19 @@ function renderJobCardPartRows(items) {
             <td class="text-primary-color fw-bold">Rs. ${(item.subTotal || 0).toFixed(2)}</td>
             <td>${statusBadge}</td>
             ${role === 'ADMIN' ? `
-            <td class="text-end px-4">
+            <td class="text-end px-4 admin-only-action">
                 <div class="d-flex gap-1 justify-content-end">
-                    ${item.issueStatus === 'PENDING' ? `
-                        <button class="btn btn-action-issue" onclick="issuePart('${item.jobCardPartId || item.partCode}')" title="Issue & Auto Deduct Stock">
+                    ${item.issueStatus === 'REQUESTED' ? `
+                        <button class="btn btn-action-issue btn-sm" onclick="issuePart('${item.jobCardPartId}')" title="Issue & Auto Deduct Stock">
                             <i class="fa-solid fa-check me-1"></i>Issue
                         </button>
-                        <button class="btn btn-action-reject" onclick="rejectPart('${item.jobCardPartId || item.partCode}')" title="Reject Request">
+                        <button class="btn btn-action-reject btn-sm" onclick="rejectPart('${item.jobCardPartId}')" title="Reject Request">
                             <i class="fa-solid fa-xmark me-1"></i>Reject
                         </button>
                     ` : ''}
                     
                     ${item.issueStatus === 'ISSUED' ? `
-                        <button class="btn btn-action-return" onclick="returnPart('${item.jobCardPartId || item.partCode}')" title="Return & Auto Restore Stock">
+                        <button class="btn btn-action-return btn-sm" onclick="returnPart('${item.jobCardPartId}')" title="Return & Auto Restore Stock">
                             <i class="fa-solid fa-rotate-left me-1"></i>Return
                         </button>
                     ` : ''}
@@ -125,12 +153,13 @@ function getStatusBadge(status) {
             return `<span class="badge bg-warning-subtle text-warning border border-warning-subtle">RETURNED</span>`;
         case 'REJECTED':
             return `<span class="badge bg-danger-subtle text-danger border border-danger-subtle">REJECTED</span>`;
+        case 'PENDING_SUPPLIER_ORDER':
+            return `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">ORDER PENDING</span>`;
         default:
-            return `<span class="badge bg-info-subtle text-info border border-info-subtle">PENDING</span>`;
+            return `<span class="badge bg-info-subtle text-info border border-info-subtle">REQUESTED</span>`;
     }
 }
 
-// PATCH /issue/{jobCardPartId} (ADMIN ONLY)
 async function issuePart(id) {
     if (!confirm("Confirm issuing this spare part? Stock will be automatically deducted.")) return;
 
@@ -141,7 +170,8 @@ async function issuePart(id) {
         });
         const result = await response.json();
 
-        if (response.ok || result.code === 200) {
+        if (response.ok) {
+            alert(result.message || "Spare Part issued successfully!");
             loadPendingRequests();
         } else {
             alert(result.message || "Failed to issue part.");
@@ -151,7 +181,6 @@ async function issuePart(id) {
     }
 }
 
-// PATCH /return/{jobCardPartId} (ADMIN ONLY)
 async function returnPart(id) {
     if (!confirm("Confirm returning this spare part? Stock will be automatically restored.")) return;
 
@@ -162,7 +191,8 @@ async function returnPart(id) {
         });
         const result = await response.json();
 
-        if (response.ok || result.code === 200) {
+        if (response.ok) {
+            alert(result.message || "Spare Part returned successfully!");
             loadPendingRequests();
         } else {
             alert(result.message || "Failed to return part.");
@@ -172,7 +202,6 @@ async function returnPart(id) {
     }
 }
 
-// PATCH /reject/{jobCardPartId} (ADMIN ONLY)
 async function rejectPart(id) {
     if (!confirm("Are you sure you want to reject this request?")) return;
 
@@ -183,7 +212,8 @@ async function rejectPart(id) {
         });
         const result = await response.json();
 
-        if (response.ok || result.code === 200) {
+        if (response.ok) {
+            alert(result.message || "Spare Part request rejected!");
             loadPendingRequests();
         } else {
             alert(result.message || "Failed to reject part request.");
@@ -195,7 +225,13 @@ async function rejectPart(id) {
 
 // Reset and Reload
 function resetAndReload() {
-    loadPendingRequests();
+    const role = localStorage.getItem("userRole");
+    if (role === "ADMIN") {
+        loadPendingRequests();
+    } else {
+        document.getElementById("jobCardCodeInput").value = "";
+        document.getElementById("jobCardPartTableBody").innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Please search by Job Card Code.</td></tr>`;
+    }
 }
 
 // Universal Client Search Filter

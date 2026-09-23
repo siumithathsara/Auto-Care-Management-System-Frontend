@@ -16,11 +16,10 @@ function getAuthHeader() {
     const token = localStorage.getItem("jwtToken");
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': token ? `Bearer ${token}` : ''
     };
 }
 
-// 1. Fetch All Suppliers & Automatically Calculate Counts
 async function loadAllSuppliers() {
     const tbody = document.getElementById("supplierTableBody");
     tbody.innerHTML = `
@@ -38,9 +37,9 @@ async function loadAllSuppliers() {
 
         const result = await res.json();
 
-        if (res.ok && result.code === 200) {
-            allSuppliersCache = result.data || [];
-            updateKPICards(allSuppliersCache); // Frontend math computation
+        if (res.ok && (result.code === 200 || result.status === 200)) {
+            allSuppliersCache = result.data || result.body || [];
+            updateKPICards(allSuppliersCache);
             renderSupplierTable(allSuppliersCache);
         } else {
             tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${result.message || 'Failed to load suppliers.'}</td></tr>`;
@@ -51,24 +50,20 @@ async function loadAllSuppliers() {
     }
 }
 
-// 2. Pure Frontend JS Count Calculation for Cards
 function updateKPICards(suppliers) {
     const totalElem = document.getElementById("kpiTotalSuppliers");
     const activeElem = document.getElementById("kpiActiveSuppliers");
 
-    // Total Count from Array Length
     if (totalElem) {
         totalElem.innerText = suppliers.length;
     }
 
-    // Active Count using Boolean Filter (matches SupplierResponseDTO.isActive)
     if (activeElem) {
         const activeCount = suppliers.filter(s => s.active === true || s.isActive === true).length;
         activeElem.innerText = activeCount;
     }
 }
 
-// 3. Render Table
 function renderSupplierTable(suppliers) {
     const tbody = document.getElementById("supplierTableBody");
 
@@ -82,14 +77,14 @@ function renderSupplierTable(suppliers) {
         const isSupplierActive = sup.active !== undefined ? sup.active : sup.isActive;
 
         const statusBadge = isSupplierActive
-            ? `<span class="badge-status-active">Active</span>`
-            : `<span class="badge-status-inactive">Inactive</span>`;
+            ? `<span class="badge bg-success text-white px-2 py-1">Active</span>`
+            : `<span class="badge bg-secondary text-white px-2 py-1">Inactive</span>`;
 
-        const toggleIcon = isSupplierActive ? "fa-toggle-on text-emerald" : "fa-toggle-off text-muted";
+        const toggleIcon = isSupplierActive ? "fa-toggle-on text-success" : "fa-toggle-off text-muted";
 
         tbody.innerHTML += `
             <tr>
-                <td><span class="supplier-code-badge">${sup.supplierCode}</span></td>
+                <td><span class="badge bg-dark border border-secondary text-info">${sup.supplierCode}</span></td>
                 <td>
                     <div class="text-white fw-bold">${sup.companyName}</div>
                     <small class="text-muted fs-8">${sup.contactPerson ? 'Contact: ' + sup.contactPerson : 'No contact name'}</small>
@@ -103,10 +98,10 @@ function renderSupplierTable(suppliers) {
                 <td>${statusBadge}</td>
                 <td class="text-end">
                     <div class="d-flex gap-2 justify-content-end">
-                        <button class="btn btn-action-icon" onclick="toggleSupplierStatus('${sup.supplierCode}')" title="Toggle Status">
+                        <button class="btn btn-sm btn-outline-light" onclick="toggleSupplierStatus('${sup.supplierCode}')" title="Toggle Status">
                             <i class="fa-solid ${toggleIcon} fs-6"></i>
                         </button>
-                        <button class="btn btn-action-icon" onclick="openEditModal('${sup.supplierCode}')" title="Edit Supplier">
+                        <button class="btn btn-sm btn-outline-warning" onclick="openEditModal('${sup.supplierCode}')" title="Edit Supplier">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                     </div>
@@ -116,7 +111,7 @@ function renderSupplierTable(suppliers) {
     });
 }
 
-// 4. Open Registration Modal
+//  Open Registration Modal
 function openCreateModal() {
     document.getElementById("editSupplierCode").value = "";
     document.getElementById("supplierForm").reset();
@@ -124,7 +119,7 @@ function openCreateModal() {
     if (supplierModalInstance) supplierModalInstance.show();
 }
 
-// 5. Open Edit Modal
+//  Open Edit Modal
 function openEditModal(supplierCode) {
     const sup = allSuppliersCache.find(s => s.supplierCode === supplierCode);
     if (!sup) return;
@@ -141,7 +136,6 @@ function openEditModal(supplierCode) {
     if (supplierModalInstance) supplierModalInstance.show();
 }
 
-// 6. Save or Update Supplier
 async function saveSupplier() {
     const editCode = document.getElementById("editSupplierCode").value;
     const companyName = document.getElementById("companyName").value.trim();
@@ -191,7 +185,6 @@ async function saveSupplier() {
     }
 }
 
-// 7. Toggle Active Status via PATCH Endpoint
 async function toggleSupplierStatus(supplierCode) {
     if (!confirm(`Are you sure you want to change status for supplier '${supplierCode}'?`)) return;
 
@@ -214,7 +207,6 @@ async function toggleSupplierStatus(supplierCode) {
     }
 }
 
-// 8. Client-side Search Filter
 function filterSuppliersLocally() {
     const query = document.getElementById("supplierSearchInput").value.toLowerCase();
     const filtered = allSuppliersCache.filter(s =>

@@ -14,9 +14,15 @@
 <div class="container-fluid px-4 py-4">
     <!-- Header -->
     <div class="row align-items-center mb-4 g-3">
-        <div class="col-12 col-md-8">
-            <h3 class="fw-bold text-white mb-1">Internal Stock Issue</h3>
-            <p class="text-muted mb-0 fs-7">Manage and track spare part allocations for internal workshop services and mechanics.</p>
+        <div class="col-12 col-md-8 d-flex align-items-center gap-3">
+            <!-- Back Button -->
+            <button type="button" class="btn btn-outline-secondary btn-back-custom" onclick="navigateToInventory()">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back
+            </button>
+            <div>
+                <h3 class="fw-bold text-white mb-1">Internal Stock Issue</h3>
+                <p class="text-muted mb-0 fs-7">Manage and track spare part allocations for internal workshop services and mechanics.</p>
+            </div>
         </div>
         <div class="col-12 col-md-4 text-md-end admin-only-action">
             <button class="btn btn-primary-custom px-4" onclick="openIssueStockModal()">
@@ -112,14 +118,25 @@
                                 <option value="" selected disabled>Loading available spare parts...</option>
                             </select>
                         </div>
+
+                        <!-- Employee Code Dropdown -->
                         <div class="col-md-6">
-                            <label class="custom-label">Employee Code *</label>
-                            <input type="text" class="form-control custom-input" id="employeeCode" placeholder="e.g. EMP-001" required>
+                            <label class="custom-label">Employee *</label>
+                            <select class="form-select custom-input" id="employeeCode" required>
+                                <option value="" selected disabled>Loading employees...</option>
+                            </select>
                         </div>
+
+                        <!-- Section Code Dropdown -->
                         <div class="col-md-6">
-                            <label class="custom-label">Section Code</label>
-                            <input type="text" class="form-control custom-input" id="sectionCode" placeholder="e.g. SEC-LUBE">
+                            <label class="custom-label">Section *</label>
+                            <select class="form-select custom-input" id="sectionCode" required>
+                                <option value="" selected disabled>Select Section</option>
+                                <option value="INTERIOR_SECTION">Interior Section</option>
+                                <option value="WASHING_SECTION">Washing Section</option>
+                            </select>
                         </div>
+
                         <div class="col-md-12">
                             <label class="custom-label">Quantity to Issue *</label>
                             <input type="number" min="1" class="form-control custom-input" id="quantity" placeholder="1" required>

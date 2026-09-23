@@ -14,18 +14,30 @@
 <div class="container-fluid px-4 py-4">
     <!-- Page Header -->
     <div class="row align-items-center mb-4 g-3">
-        <div class="col-12 col-md-8">
+        <div class="col-12 col-md-6">
             <h3 class="fw-bold text-white mb-1">Spare Parts Inventory</h3>
             <p class="text-muted mb-0 fs-7">Manage automotive parts, track real-time stock levels, and monitor reorder alerts.</p>
         </div>
-        <div class="col-12 col-md-4 text-md-end admin-only-action">
-            <button class="btn btn-primary-custom" onclick="openSaveSparePartModal()">
+        <!-- Align  Buttons Collection එක -->
+        <div class="col-12 col-md-6 text-md-end d-flex gap-2 justify-content-md-end flex-wrap">
+            <!-- Part Issue Button -->
+            <a href="job-card-part-manage.html" class="btn btn-outline-info" onclick="openModalFromLink(event, this)">
+                <i class="fa-solid fa-hand-holding-hand me-2"></i>Part Issue
+            </a>
+
+            <!-- Internal Stock Issue Button -->
+            <a href="internal-stock-issue.html" class="btn btn-outline-warning" onclick="openModalFromLink(event, this)">
+                <i class="fa-solid fa-boxes-packing me-2"></i>Internal Stock Issue
+            </a>
+
+            <!-- Add New Part Button -->
+            <button class="btn btn-primary-custom admin-only-action" onclick="openSaveSparePartModal()">
                 <i class="fa-solid fa-plus me-2"></i>Add New Part
             </button>
         </div>
     </div>
 
-    <!-- KPI Alert Cards (Low Stock Focus) -->
+    <!-- KPI Alert Cards -->
     <div class="row g-3 mb-4">
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="kpi-card">
@@ -46,7 +58,7 @@
                     <div>
                         <span class="kpi-title text-warning">LOW STOCK ALERTS</span>
                         <h3 class="kpi-value mt-2 text-warning" id="lowStockCount">0</h3>
-                        <small class="text-muted fs-9 d-block mt-1"><i class="fa-solid fa-envelope me-1"></i>Email trigger active</small>
+                        <small class="text-muted fs-9 d-block mt-1"><i class="fa-solid fa-envelope me-1"></i>Reorder level triggered</small>
                     </div>
                     <div class="kpi-icon-box bg-warning-glow">
                         <i class="fa-solid fa-triangle-exclamation text-warning"></i>
@@ -56,10 +68,9 @@
         </div>
     </div>
 
-    <!-- Controls Panel (Search & Filter Tabs) -->
+    <!-- Controls Panel -->
     <div class="row g-3 align-items-center mb-3">
         <div class="col-12 col-md-8">
-            <!-- Search Input with Icon Inside -->
             <div class="custom-search-wrapper">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
                 <input type="text" id="sparePartSearchInput" class="form-control custom-search-input"
@@ -67,22 +78,20 @@
             </div>
         </div>
         <div class="col-12 col-md-4 text-md-end">
-            <!-- Visible Refresh Button -->
             <button type="button" class="btn btn-refresh-console w-100 w-md-auto" onclick="loadAllSpareParts()">
                 <i class="fa-solid fa-rotate me-2"></i>Refresh Inventory
             </button>
         </div>
     </div>
 
-        <!-- Filter Badges -->
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button class="btn btn-outline-custom active-filter px-3 py-1 fs-8" id="btnFilterAll" onclick="loadAllSpareParts()">
-                <i class="fa-solid fa-list me-1"></i>ALL PARTS
-            </button>
-            <button class="btn btn-outline-custom px-3 py-1 fs-8 text-warning admin-only-action" id="btnFilterLowStock" onclick="loadLowStockSpareParts()">
-                <i class="fa-solid fa-triangle-exclamation me-1"></i>LOW STOCK ALERTS
-            </button>
-        </div>
+    <!-- Filter Badges -->
+    <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+        <button class="btn btn-outline-custom active-filter px-3 py-1 fs-8" id="btnFilterAll" onclick="loadAllSpareParts()">
+            <i class="fa-solid fa-list me-1"></i>ALL PARTS
+        </button>
+        <button class="btn btn-outline-custom px-3 py-1 fs-8 text-warning admin-only-action" id="btnFilterLowStock" onclick="loadLowStockSpareParts()">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>LOW STOCK ALERTS
+        </button>
     </div>
 
     <!-- Main Table Panel -->
@@ -104,18 +113,14 @@
                 </tr>
                 </thead>
                 <tbody id="sparePartTableBody">
-                <tr>
-                    <td colspan="10" class="text-center text-muted py-5 fs-7">
-                        <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Loading inventory details...
-                    </td>
-                </tr>
+                <!-- Loaded via JS -->
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Modal: Save & Update Spare Part -->
+<!-- Modal 1: Save & Update Spare Part -->
 <div class="modal fade" id="sparePartModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-modal">
@@ -173,7 +178,19 @@
     </div>
 </div>
 
+<!-- Dynamic Reusable Modal (Pop-up load වීම සඳහා) -->
+<div class="modal fade" id="dynamicContainerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content custom-modal" id="dynamicModalContent">
+            <!-- HTML File Content Dynamic Inject වේ -->
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../../js/admin/spare-part-manage.js"></script>
+<script src="../../js/admin/job-card-part-manage.js"></script>
+<script src="../../js/admin/internal-stock-issue.js"></script>
 </body>
 </html>

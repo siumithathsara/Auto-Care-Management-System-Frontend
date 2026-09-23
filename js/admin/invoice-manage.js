@@ -37,8 +37,10 @@ async function loadAdminInvoices() {
         });
         const result = await res.json();
 
-        if (res.ok && result.code === 200) {
-            adminInvoicesCache = result.data || [];
+        console.log("API Response:", result);
+
+        if (res.ok && result.status === 200) {
+            adminInvoicesCache = result.body || [];
             updateAdminKPIs(adminInvoicesCache);
             renderAdminTable(adminInvoicesCache);
         } else {
@@ -81,10 +83,10 @@ function renderAdminTable(invoices) {
                     <small class="text-muted fs-8">${inv.customerPhone || '-'}</small>
                 </td>
                 <td>
-                    <div class="text-white fw-bold fs-7">LKR ${inv.totalAmount.toLocaleString('en-US', {minimumFractionDigits:2})}</div>
-                    <small class="text-muted fs-8">Paid: ${inv.paidAmount.toLocaleString('en-US', {minimumFractionDigits:2})}</small>
+                    <div class="text-white fw-bold fs-7">LKR ${(inv.totalAmount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+                    <small class="text-muted fs-8">Paid: ${(inv.paidAmount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</small>
                 </td>
-                <td><span class="${badgeClass}">${inv.paymentStatus}</span></td>
+                <td><span class="${badgeClass}">${inv.paymentStatus || 'UNPAID'}</span></td>
                 <td class="text-muted fs-7">${inv.issuedDate ? new Date(inv.issuedDate).toLocaleDateString() : '-'}</td>
                 <td class="text-end">
                     <button class="btn btn-action-icon" onclick="viewInvoiceModal('${inv.invoiceCode}')" title="View Detail">
@@ -106,19 +108,33 @@ async function openCreateInvoiceModal() {
     select.innerHTML = `<option value="">Loading job cards...</option>`;
 
     try {
-        const res = await fetch(`${JOB_CARD_API}/get-all`, {
-            method: "GET",
+        const res = await fetch('http://localhost:8080/api/v1/job-card/get-all', {
+            method: 'GET',
             headers: getAuthHeaders()
         });
         const result = await res.json();
 
-        if (res.ok && result.data) {
-            availableJobCardsCache = result.data;
-            select.innerHTML = `<option value="">-- Select Completed Job Card --</option>`;
-            availableJobCardsCache.forEach(jc => {
+        const jobCardData = result.body || result.data;
+        if (res.ok && jobCardData) {
+
+            const invoicedJobCardCodes = adminInvoicesCache.map(inv => inv.jobCardCode);
+
+            availableJobCardsCache = jobCardData.filter(jc => {
                 const code = jc.jobCardCode || jc.code;
-                select.innerHTML += `<option value="${code}">${code} - ${jc.licensePlate || jc.vehicleCode || ''}</option>`;
+                return !invoicedJobCardCodes.includes(code);
             });
+
+            select.innerHTML = `<option value="">-- Select Completed Job Card --</option>`;
+
+            if (availableJobCardsCache.length > 0) {
+                availableJobCardsCache.forEach(jc => {
+                    const code = jc.jobCardCode || jc.code;
+                    select.innerHTML += `<option value="${code}">${code} - ${jc.licensePlate || jc.vehicleCode || ''}</option>`;
+                });
+            } else {
+                select.innerHTML = `<option value="">No Job Cards Available</option>`;
+            }
+
         } else {
             select.innerHTML = `<option value="">No Job Cards Available</option>`;
         }
@@ -143,12 +159,21 @@ function onJobCardSelected() {
 
     selectedJobCardObj = availableJobCardsCache.find(j => (j.jobCardCode || j.code) === selectedCode);
 
-    if (selectedJobCardObj) {
-        document.getElementById("previewCustomerName").innerText = selectedJobCardObj.customerUsername || selectedJobCardObj.customerName || 'N/A';
-        document.getElementById("previewCustomerPhone").innerText = selectedJobCardObj.customerPhone || 'N/A';
-        document.getElementById("previewVehicle").innerText = `${selectedJobCardObj.licensePlate || '-'} (${selectedJobCardObj.brand || ''} ${selectedJobCardObj.model || ''})`;
 
-        const subtotal = selectedJobCardObj.subtotal || selectedJobCardObj.totalCost || 0;
+    console.log("Selected Job Card Object:", selectedJobCardObj);
+
+    if (selectedJobCardObj) {
+
+        const custName = selectedJobCardObj.customerUsername || selectedJobCardObj.customerName || selectedJobCardObj.clientName || 'N/A';
+        const custPhone = selectedJobCardObj.customerPhone || selectedJobCardObj.phone || selectedJobCardObj.contactNumber || 'N/A';
+        const license = selectedJobCardObj.licensePlate || selectedJobCardObj.vehicleCode || selectedJobCardObj.vehicleNumber || '-';
+        const brandModel = `${selectedJobCardObj.brand || ''} ${selectedJobCardObj.model || ''}`.trim();
+
+        document.getElementById("previewCustomerName").innerText = custName;
+        document.getElementById("previewCustomerPhone").innerText = custPhone;
+        document.getElementById("previewVehicle").innerText = brandModel ? `${license} (${brandModel})` : license;
+
+        const subtotal = selectedJobCardObj.subtotal || selectedJobCardObj.totalCost || selectedJobCardObj.estimatedTotalFee || selectedJobCardObj.totalAmount || 0;
         document.getElementById("previewSubtotal").innerText = `LKR ${subtotal.toLocaleString('en-US', {minimumFractionDigits:2})}`;
 
         previewCard.classList.remove("d-none");
@@ -157,7 +182,7 @@ function onJobCardSelected() {
 }
 
 function calculateCalculatedTotals() {
-    const subtotal = selectedJobCardObj ? (selectedJobCardObj.subtotal || selectedJobCardObj.totalCost || 0) : 0;
+    const subtotal = selectedJobCardObj ? (selectedJobCardObj.subtotal || selectedJobCardObj.totalCost || selectedJobCardObj.estimatedTotalFee || selectedJobCardObj.totalAmount || 0) : 0;
     const taxPct = parseFloat(document.getElementById("taxPercentage").value) || 0;
     const discPct = parseFloat(document.getElementById("discountPercentage").value) || 0;
     const paid = parseFloat(document.getElementById("paidAmount").value) || 0;
@@ -195,15 +220,15 @@ async function submitCreateInvoice() {
         });
         const result = await res.json();
 
-        if (res.ok && (result.code === 201 || result.code === 200)) {
+        if (res.ok && (result.status === 201 || result.status === 200 || result.code === 201 || result.code === 200)) {
             alert(result.message || "Invoice Created Successfully!");
             createModalInstance.hide();
 
-            // Automatic Jasper PDF Download handling
-            if (result.data && result.data.pdfBase64) {
-                const invCode = result.data.invoice ? result.data.invoice.invoiceCode : "Generated";
+            const resData = result.body || result.data;
+            if (resData && resData.pdfBase64) {
+                const invCode = resData.invoice ? resData.invoice.invoiceCode : "Generated";
                 const link = document.createElement("a");
-                link.href = `data:application/pdf;base64,${result.data.pdfBase64}`;
+                link.href = `data:application/pdf;base64,${resData.pdfBase64}`;
                 link.download = `Invoice_${invCode}.pdf`;
                 link.click();
             }
@@ -224,18 +249,18 @@ function viewInvoiceModal(code) {
 
     document.getElementById("adminModalTitle").innerText = `Invoice Details - ${inv.invoiceCode}`;
     document.getElementById("adminModalBody").innerHTML = `
-        <div class="invoice-detail-row"><span class="text-muted">Job Card Code:</span> <span class="text-white fw-bold">${inv.jobCardCode}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Vehicle Plate:</span> <span class="text-white">${inv.licensePlate || '-'} (${inv.brand || ''} ${inv.model || ''})</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Customer Name:</span> <span class="text-white">${inv.customerUsername || 'N/A'}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Customer Email:</span> <span class="text-white">${inv.customerEmail || '-'}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Subtotal:</span> <span class="text-white">LKR ${inv.subtotal.toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Tax Amount:</span> <span class="text-white">LKR ${(inv.taxAmount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Discount:</span> <span class="text-white">LKR ${(inv.discount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Total Amount:</span> <span class="text-emerald fw-bold fs-6">LKR ${inv.totalAmount.toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Paid Amount:</span> <span class="text-white">LKR ${inv.paidAmount.toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Balance Due:</span> <span class="text-warning fw-bold">LKR ${inv.balanceAmount.toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Payment Method:</span> <span class="text-white">${inv.paymentMethod}</span></div>
-        <div class="invoice-detail-row"><span class="text-muted">Issued By:</span> <span class="text-white">${inv.issuedByUsername || 'System Admin'}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Job Card Code:</span> <span class="text-white fw-bold">${inv.jobCardCode}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Vehicle Plate:</span> <span class="text-white">${inv.licensePlate || '-'} (${inv.brand || ''} ${inv.model || ''})</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Customer Name:</span> <span class="text-white">${inv.customerUsername || 'N/A'}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Customer Email:</span> <span class="text-white">${inv.customerEmail || '-'}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Subtotal:</span> <span class="text-white">LKR ${(inv.subtotal || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Tax Amount:</span> <span class="text-white">LKR ${(inv.taxAmount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Discount:</span> <span class="text-white">LKR ${(inv.discount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Total Amount:</span> <span class="text-emerald fw-bold fs-6">LKR ${(inv.totalAmount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Paid Amount:</span> <span class="text-white">LKR ${(inv.paidAmount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Balance Due:</span> <span class="text-warning fw-bold">LKR ${(inv.balanceAmount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Payment Method:</span> <span class="text-white">${inv.paymentMethod || '-'}</span></div>
+        <div class="invoice-detail-row mb-2"><span class="text-muted">Issued By:</span> <span class="text-white">${inv.issuedByUsername || 'System Admin'}</span></div>
     `;
     viewModalInstance.show();
 }

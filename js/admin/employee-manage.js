@@ -4,7 +4,10 @@ let allEmployeesCache = [];
 let employeeModalInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-    employeeModalInstance = new bootstrap.Modal(document.getElementById('employeeModal'));
+    const modalElement = document.getElementById('employeeModal');
+    if (modalElement) {
+        employeeModalInstance = new bootstrap.Modal(modalElement);
+    }
 
     const userRole = (localStorage.getItem("userRole") || "ADVISOR").toUpperCase();
     setupRolePermissions(userRole);
@@ -12,16 +15,18 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function getAuthHeader() {
+    const token = localStorage.getItem("jwtToken");
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem("jwtToken")}`
+        'Authorization': token ? `Bearer ${token}` : ''
     };
 }
 
-// Security UI Controls based on User Role
 function setupRolePermissions(role) {
     const roleIndicator = document.getElementById("roleIndicator");
     const addBtn = document.getElementById("addEmployeeBtn");
+
+    if (!roleIndicator) return;
 
     if (role === "ADMIN") {
         roleIndicator.className = "badge bg-success px-3 py-2";
@@ -34,7 +39,6 @@ function setupRolePermissions(role) {
     }
 }
 
-// Fetch All Employees
 async function loadAllEmployees() {
     const tbody = document.getElementById("employeeTableBody");
     try {
@@ -42,7 +46,8 @@ async function loadAllEmployees() {
 
         if (res.ok) {
             const result = await res.json();
-            allEmployeesCache = result.data || [];
+
+            allEmployeesCache = result.body || result.data || [];
             renderEmployeeTable(allEmployeesCache);
         } else {
             tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to fetch employees. Access denied or server error.</td></tr>`;
@@ -58,17 +63,18 @@ function renderEmployeeTable(employees) {
     const tbody = document.getElementById("employeeTableBody");
     const userRole = (localStorage.getItem("userRole") || "ADVISOR").toUpperCase();
 
-    document.getElementById("totalEmployeeCount").innerText = employees.length;
+    const countElement = document.getElementById("totalEmployeeCount");
+    if (countElement) countElement.innerText = employees.length;
 
-    if (employees.length === 0) {
+    if (!Array.isArray(employees) || employees.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5 fs-7">No employees found.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = "";
     employees.forEach(emp => {
-        // Build Action Column based on Role
         let actionColumnHtml = "";
+
         if (userRole === "ADMIN") {
             actionColumnHtml = `
                 <div class="d-flex gap-2 justify-content-end">
@@ -81,15 +87,15 @@ function renderEmployeeTable(employees) {
                 </div>
             `;
         } else {
-            actionColumnHtml = `<span class="badge bg-secondary-subtle text-muted fs-8">Read Only</span>`;
+            actionColumnHtml = `<span class="badge bg-secondary text-light fs-8">Read Only</span>`;
         }
 
         tbody.innerHTML += `
             <tr>
-                <td><span class="badge bg-dark border border-secondary text-info fw-semibold">${emp.employeeCode}</span></td>
-                <td><span class="text-white fw-bold">${emp.employeeName}</span></td>
-                <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">${emp.designation}</span></td>
-                <td class="text-light"><i class="fa-solid fa-phone me-1 text-muted fs-8"></i>${emp.phone}</td>
+                <td><span class="badge bg-dark border border-secondary text-info fw-semibold">${emp.employeeCode || ''}</span></td>
+                <td><span class="text-white fw-bold">${emp.employeeName || ''}</span></td>
+                <td><span class="badge bg-primary text-white">${emp.designation || ''}</span></td>
+                <td class="text-light"><i class="fa-solid fa-phone me-1 text-muted fs-8"></i>${emp.phone || ''}</td>
                 <td class="text-muted fs-7">${emp.address || '-'}</td>
                 <td class="text-end px-4">${actionColumnHtml}</td>
             </tr>
@@ -97,27 +103,27 @@ function renderEmployeeTable(employees) {
     });
 }
 
-// Open Modal for Create
+// Open Modal for Create (Admin Only)
 function openCreateModal() {
     document.getElementById("editEmployeeCode").value = "";
     document.getElementById("employeeForm").reset();
     document.getElementById("modalTitle").innerHTML = `<i class="fa-solid fa-user-plus me-2 text-primary"></i>Register Employee`;
-    employeeModalInstance.show();
+    if (employeeModalInstance) employeeModalInstance.show();
 }
 
-// Open Modal for Edit
+// Open Modal for Edit (Admin Only)
 function openEditModal(employeeCode) {
     const emp = allEmployeesCache.find(e => e.employeeCode === employeeCode);
     if (!emp) return;
 
     document.getElementById("editEmployeeCode").value = emp.employeeCode;
-    document.getElementById("employeeName").value = emp.employeeName;
-    document.getElementById("designation").value = emp.designation;
-    document.getElementById("phone").value = emp.phone;
+    document.getElementById("employeeName").value = emp.employeeName || "";
+    document.getElementById("designation").value = emp.designation || "";
+    document.getElementById("phone").value = emp.phone || "";
     document.getElementById("address").value = emp.address || "";
 
     document.getElementById("modalTitle").innerHTML = `<i class="fa-solid fa-user-pen me-2 text-warning"></i>Edit Employee (${emp.employeeCode})`;
-    employeeModalInstance.show();
+    if (employeeModalInstance) employeeModalInstance.show();
 }
 
 // Save or Update Employee (Admin Only)
@@ -159,7 +165,7 @@ async function saveEmployee() {
         const result = await res.json();
         if (res.ok) {
             alert(result.message || (isEdit ? "Employee updated successfully!" : "Employee registered successfully!"));
-            employeeModalInstance.hide();
+            if (employeeModalInstance) employeeModalInstance.hide();
             loadAllEmployees();
         } else {
             alert(result.message || "Operation failed.");
@@ -189,6 +195,7 @@ async function deleteEmployee(employeeCode) {
         }
     } catch (err) {
         console.error("Delete employee error:", err);
+        alert("Error connecting to server.");
     }
 }
 
@@ -196,10 +203,10 @@ async function deleteEmployee(employeeCode) {
 function filterEmployeesLocally() {
     const query = document.getElementById("employeeSearchInput").value.toLowerCase();
     const filtered = allEmployeesCache.filter(e =>
-        e.employeeCode.toLowerCase().includes(query) ||
-        e.employeeName.toLowerCase().includes(query) ||
-        e.designation.toLowerCase().includes(query) ||
-        e.phone.includes(query)
+        (e.employeeCode && e.employeeCode.toLowerCase().includes(query)) ||
+        (e.employeeName && e.employeeName.toLowerCase().includes(query)) ||
+        (e.designation && e.designation.toLowerCase().includes(query)) ||
+        (e.phone && e.phone.includes(query))
     );
     renderEmployeeTable(filtered);
 }

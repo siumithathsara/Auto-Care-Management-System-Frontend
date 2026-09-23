@@ -3,13 +3,26 @@ const SERVICE_BASE_URL = "http://localhost:8080/api/v1/service";
 const VEHICLE_BASE_URL = "http://localhost:8080/api/v1/vehicle";
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const currentUserCode = localStorage.getItem("userCode") || "CUST001";
-    document.getElementById("appUserCode").value = currentUserCode;
 
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("appDate").setAttribute("min", today);
+    const currentUserCode = localStorage.getItem("customerCode") || localStorage.getItem("userCode") || "";
 
-    await loadCustomerVehicles(currentUserCode);
+    const userCodeInput = document.getElementById("appUserCode");
+    if (userCodeInput) userCodeInput.value = currentUserCode;
+
+    const dateInput = document.getElementById("appDate");
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute("min", today);
+    }
+
+    if (currentUserCode) {
+        await loadCustomerVehicles(currentUserCode);
+    } else {
+        const select = document.getElementById('appVehicleSelect');
+        if (select) {
+            select.innerHTML = '<option value="" selected disabled>Please login to view vehicles</option>';
+        }
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const preSelectedCode = urlParams.get('serviceCode');
@@ -17,13 +30,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function getAuthHeader() {
+    const token = localStorage.getItem("jwtToken") || localStorage.getItem("token");
     return {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem("jwtToken")}`
+        'Authorization': token ? `Bearer ${token}` : ''
     };
 }
 
-// Service එකට අදාළ Image එක Code එකෙන් හෝ Name එකෙන් තෝරාගැනීම
 function getServiceImage(serviceCode, serviceName) {
     const code = (serviceCode || '').toLowerCase();
     const name = (serviceName || '').toLowerCase();
@@ -44,25 +57,43 @@ function getServiceImage(serviceCode, serviceName) {
 }
 
 async function loadCustomerVehicles(userCode) {
+    const select = document.getElementById('appVehicleSelect');
+    if (!select) return;
+
+    console.log("Fetching vehicles for customer/user code:", userCode);
+
     try {
-        const res = await fetch(`${VEHICLE_BASE_URL}/get-by-customer/${userCode}`, { headers: getAuthHeader() });
+        const res = await fetch(`${VEHICLE_BASE_URL}/get-by-customer/${userCode}`, {
+            headers: getAuthHeader()
+        });
+
+        console.log("Vehicle Fetch HTTP Status:", res.status);
+
         if (res.ok) {
             const result = await res.json();
-            const vehicles = result.data || [];
-            const select = document.getElementById('appVehicleSelect');
+            console.log("Backend Response JSON:", result);
 
-            if (vehicles.length === 0) {
-                select.innerHTML = '<option value="" selected disabled>No vehicles found</option>';
+            const vehicles = result.body || result.data || result;
+
+            if (!Array.isArray(vehicles) || vehicles.length === 0) {
+                select.innerHTML = '<option value="" selected disabled>No vehicles found for this user</option>';
                 return;
             }
 
             select.innerHTML = '<option value="" selected disabled>Choose a vehicle...</option>';
             vehicles.forEach(v => {
-                select.innerHTML += `<option value="${v.vehicleCode}">${v.licensePlate || v.vehicleCode} - ${v.vehicleModel}</option>`;
+                const code = v.vehicleCode || v.id;
+                const plate = v.licensePlate || v.vehicleNumber || code;
+                const model = v.vehicleModel || v.model || '';
+
+                select.innerHTML += `<option value="${code}">${plate} - ${model}</option>`;
             });
+        } else {
+            select.innerHTML = `<option value="" selected disabled>Error: ${res.status} ${res.statusText}</option>`;
         }
     } catch (err) {
-        console.error("Vehicle fetch error:", err);
+        console.error("Vehicle fetch network error:", err);
+        select.innerHTML = '<option value="" selected disabled>Network Error loading vehicles</option>';
     }
 }
 
@@ -71,7 +102,8 @@ async function loadServices(preSelectedCode) {
         const res = await fetch(`${SERVICE_BASE_URL}/get-all`, { headers: getAuthHeader() });
         if (res.ok) {
             const result = await res.json();
-            renderServiceCards(result.data || [], preSelectedCode);
+            const services = result.body || result.data || result || [];
+            renderServiceCards(services, preSelectedCode);
         }
     } catch (err) {
         console.error("Service fetch error:", err);
@@ -80,21 +112,29 @@ async function loadServices(preSelectedCode) {
 
 function renderServiceCards(services, preSelectedCode) {
     const container = document.getElementById('servicesCardContainer');
+    if (!container) return;
+
     container.innerHTML = "";
+
+    if (!Array.isArray(services) || services.length === 0) {
+        container.innerHTML = `<div class="col-12 text-center text-muted py-3">No active services available right now.</div>`;
+        return;
+    }
 
     services.forEach(s => {
         const isSelected = (preSelectedCode && s.serviceCode === preSelectedCode);
-
-        // Backend එකේ URL එකක් නැතහොත් Auto Mapped Image එක ගන්නවා
         const imageUrl = (s.imageUrl && s.imageUrl.trim() !== "")
             ? s.imageUrl
             : getServiceImage(s.serviceCode, s.serviceName);
+
+        const fee = s.standardFee || 0;
+        const time = s.estimatedTimeMin || s.estimatedTimeMins || 0;
 
         container.innerHTML += `
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="cat-card ${isSelected ? 'selected-card' : ''}" id="card_${s.serviceCode}" onclick="toggleServiceCard('${s.serviceCode}')">
                     <div class="card-select-badge"><i class="fa-solid fa-check"></i></div>
-                    <input type="checkbox" class="d-none service-checkbox" value="${s.serviceCode}" data-fee="${s.standardFee}" data-time="${s.estimatedTimeMin}" id="chk_${s.serviceCode}" ${isSelected ? 'checked' : ''}>
+                    <input type="checkbox" class="d-none service-checkbox" value="${s.serviceCode}" data-fee="${fee}" data-time="${time}" id="chk_${s.serviceCode}" ${isSelected ? 'checked' : ''}>
                     
                     <div class="d-flex align-items-center gap-3 pe-3">
                         <div style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; flex-shrink: 0; background-color: #2a2a2a;">
@@ -107,8 +147,8 @@ function renderServiceCards(services, preSelectedCode) {
                             <span class="cat-badge mb-1 d-inline-block">${s.serviceCode}</span>
                             <h6 class="fw-bold text-white text-truncate mb-1 fs-7">${s.serviceName}</h6>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted fs-8"><i class="fa-regular fa-clock me-1"></i>${s.estimatedTimeMin} mins</span>
-                                <span class="fw-bold fs-7" style="color: var(--emerald);">LKR ${parseFloat(s.standardFee).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                <span class="text-muted fs-8"><i class="fa-regular fa-clock me-1"></i>${time} mins</span>
+                                <span class="fw-bold fs-7" style="color: var(--emerald, #10b981);">LKR ${parseFloat(fee).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                             </div>
                         </div>
                     </div>
@@ -124,13 +164,15 @@ function toggleServiceCard(serviceCode) {
     const checkbox = document.getElementById(`chk_${serviceCode}`);
     const card = document.getElementById(`card_${serviceCode}`);
 
-    checkbox.checked = !checkbox.checked;
-    if (checkbox.checked) {
-        card.classList.add('selected-card');
-    } else {
-        card.classList.remove('selected-card');
+    if (checkbox && card) {
+        checkbox.checked = !checkbox.checked;
+        if (checkbox.checked) {
+            card.classList.add('selected-card');
+        } else {
+            card.classList.remove('selected-card');
+        }
+        calculateTotal();
     }
-    calculateTotal();
 }
 
 function calculateTotal() {
@@ -139,12 +181,15 @@ function calculateTotal() {
     let totalTime = 0;
 
     selectedBoxes.forEach(cb => {
-        totalFee += parseFloat(cb.getAttribute('data-fee'));
-        totalTime += parseInt(cb.getAttribute('data-time'));
+        totalFee += parseFloat(cb.getAttribute('data-fee') || 0);
+        totalTime += parseInt(cb.getAttribute('data-time') || 0);
     });
 
-    document.getElementById('totalEstCost').innerText = `LKR ${totalFee.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-    document.getElementById('totalEstTime').innerText = `${totalTime} mins`;
+    const costElem = document.getElementById('totalEstCost');
+    const timeElem = document.getElementById('totalEstTime');
+
+    if (costElem) costElem.innerText = `LKR ${totalFee.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    if (timeElem) timeElem.innerText = `${totalTime} mins`;
 }
 
 async function handleAppointmentSubmit(event) {
@@ -156,13 +201,22 @@ async function handleAppointmentSubmit(event) {
         return;
     }
 
+    const vehicleVal = document.getElementById('appVehicleSelect')?.value;
+    if (!vehicleVal) {
+        alert("Please select a vehicle.");
+        return;
+    }
+
+    const rawTime = document.getElementById('appTime')?.value;
+    const formattedTime = rawTime ? (rawTime.length === 5 ? `${rawTime}:00` : rawTime) : "";
+
     const payload = {
-        userCode: document.getElementById('appUserCode').value,
-        vehicleCode: document.getElementById('appVehicleSelect').value,
-        appointmentDate: document.getElementById('appDate').value,
-        appointmentTime: document.getElementById('appTime').value + ":00",
+        userCode: document.getElementById('appUserCode')?.value || '',
+        vehicleCode: vehicleVal,
+        appointmentDate: document.getElementById('appDate')?.value || '',
+        appointmentTime: formattedTime,
         serviceCodes: selectedServices,
-        specialNotes: document.getElementById('appSpecialNotes').value
+        specialNotes: document.getElementById('appSpecialNotes')?.value || ''
     };
 
     try {
@@ -173,13 +227,14 @@ async function handleAppointmentSubmit(event) {
         });
 
         const result = await res.json();
-        if (res.ok) {
+        if (res.ok && (result.code === 201 || result.code === 200 || result.status === 201 || result.status === 200)) {
             alert(result.message || "Appointment created successfully!");
             window.location.href = "my-appointments.html";
         } else {
-            alert(result.message || "Operation failed.");
+            alert(result.message || "Operation failed. Please check payload data.");
         }
     } catch (err) {
         console.error("Error creating appointment:", err);
+        alert("Server network error!");
     }
 }

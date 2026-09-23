@@ -166,16 +166,19 @@
             <div class="modal-body px-4 py-3">
                 <form id="createJobCardForm">
                     <div class="row g-3">
-                        <!-- Vehicle Code -->
+                        <!-- Vehicle Code with onblur event -->
                         <div class="col-12">
                             <label class="form-label modal-custom-label">VEHICLE CODE *</label>
-                            <input type="text" id="reqVehicleCode" class="form-control custom-search-input" placeholder="e.g. VEH-1002" required>
+                            <input type="text" id="reqVehicleCode" class="form-control custom-search-input" placeholder="e.g. VEH-1002" onblur="fetchVehicleDefaultDetails()" required>
+                            <small class="text-muted">Enter vehicle code and click outside to auto-load appointment, advisor and services.</small>
                         </div>
 
-                        <!-- Advisor Code & Appointment Code -->
+                        <!-- Advisor Dropdown & Appointment Code -->
                         <div class="col-12 col-md-6">
-                            <label class="form-label modal-custom-label">ADVISOR USER CODE *</label>
-                            <input type="text" id="reqAdvisorCode" class="form-control custom-search-input" placeholder="e.g. ADV-001" required>
+                            <label class="form-label modal-custom-label">ASSIGNED ADVISOR *</label>
+                            <select id="reqAdvisorCode" class="form-select custom-search-input" required>
+                                <option value="">Select Advisor</option>
+                            </select>
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label modal-custom-label">APPOINTMENT CODE</label>
@@ -242,8 +245,12 @@
             <div class="modal-body">
                 <input type="hidden" id="addPartJobCardCode">
                 <div class="mb-3">
-                    <label class="form-label text-muted fs-7">Spare Part Item Code *</label>
+                    <label class="form-label text-muted fs-7">Spare Part Code *</label>
                     <input type="text" id="partItemCode" class="form-control custom-search-input" placeholder="e.g. PRT-1002" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted fs-7">Requested By (User Code) *</label>
+                    <input type="text" id="partUserCode" class="form-control custom-search-input" placeholder="e.g. USR-001" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted fs-7">Quantity *</label>

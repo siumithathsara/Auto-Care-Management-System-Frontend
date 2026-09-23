@@ -256,3 +256,13 @@ body.vc-app {
     background: #EF4444;
     color: #FFFFFF;
 }
+#jobCardPartTableBody td {
+    color: #ffffff !important;
+}
+
+
+#jobCardPartTableBody td:nth-child(4),
+#jobCardPartTableBody td:nth-child(5) {
+    color: #ffffff !important;
+    font-weight: 600;
+}

@@ -8,35 +8,71 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../css/vehicle.css">
     <style>
-        .vehicle-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; transition: transform 0.2s; }
-        .vehicle-card:hover { transform: translateY(-5px); border-color: var(--primary-color); }
-        .v-plate { font-size: 1.4rem; font-weight: 800; color: var(--primary-color); }
+        .vehicle-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+            border-color: #0d6efd;
+        }
+        .v-plate {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0d6efd;
+            letter-spacing: 1px;
+        }
+        .custom-input {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #fff;
+        }
+        .custom-input:focus {
+            background-color: #0f172a;
+            color: #fff;
+            border-color: #0d6efd;
+            box-shadow: none;
+        }
+        .custom-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        .custom-modal .modal-content {
+            background-color: #1e293b;
+            color: #fff;
+            border: 1px solid #334155;
+            border-radius: 12px;
+        }
     </style>
 </head>
-<body class="vc-app">
+<body class="bg-dark text-white">
 
 <div class="container px-4 py-5">
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <h3 class="fw-bold text-white mb-1">My Garage</h3>
+            <h3 class="fw-bold text-white mb-1"><i class="fa-solid fa-warehouse me-2 text-primary"></i>My Garage</h3>
             <p class="text-muted mb-0 fs-7">Manage your registered vehicles.</p>
         </div>
-        <button class="btn btn-primary-custom" onclick="openVehicleModal('ADD')">
+        <button class="btn btn-primary px-4 fw-semibold" onclick="openVehicleModal('ADD')">
             <i class="fa-solid fa-plus me-2"></i> Add Vehicle
         </button>
     </div>
 
-    <!-- Vehicle Grid -->
+    <!-- Vehicle Grid Container -->
     <div class="row g-4" id="customerVehicleGrid">
-        <!-- Loaded via JS -->
+        <!-- Loaded via JavaScript -->
     </div>
 </div>
 
-<!-- Add/Edit Vehicle Modal (Similar Form Structure, but no Customer Code input needed as it's auto-filled) -->
+<!-- Add/Edit Vehicle Modal -->
 <div class="modal fade" id="vehicleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content custom-modal">
-            <div class="modal-header">
+            <div class="modal-header border-secondary">
                 <h5 class="modal-title fw-bold" id="modalTitle">Vehicle Details</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -46,19 +82,23 @@
                     <input type="hidden" id="formAction">
 
                     <div class="row g-3">
-                        <div class="col-12">
+                        <div class="col-md-6">
                             <label class="custom-label">License Plate *</label>
-                            <input type="text" id="vLicense" class="form-control custom-input" required>
+                            <input type="text" id="vLicense" class="form-control custom-input" placeholder="e.g. CAB-1234" required>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-6">
                             <label class="custom-label">Brand *</label>
-                            <input type="text" id="vBrand" class="form-control custom-input" required>
+                            <input type="text" id="vBrand" class="form-control custom-input" placeholder="e.g. Toyota" required>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-6">
                             <label class="custom-label">Model *</label>
-                            <input type="text" id="vModel" class="form-control custom-input" required>
+                            <input type="text" id="vModel" class="form-control custom-input" placeholder="e.g. Prius" required>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-6">
+                            <label class="custom-label">Manufacture Year</label>
+                            <input type="number" id="vYear" class="form-control custom-input" placeholder="e.g. 2018" min="1900" max="2099">
+                        </div>
+                        <div class="col-md-6">
                             <label class="custom-label">Fuel Type *</label>
                             <select id="vFuel" class="form-select custom-input" required>
                                 <option value="PETROL">Petrol</option>
@@ -67,17 +107,30 @@
                                 <option value="ELECTRIC">Electric</option>
                             </select>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-6">
                             <label class="custom-label">Transmission *</label>
                             <select id="vTrans" class="form-select custom-input" required>
                                 <option value="AUTO">Auto</option>
                                 <option value="MANUAL">Manual</option>
-                                <option value="CVT">CVT</option>
                             </select>
                         </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Color</label>
+                            <input type="text" id="vColor" class="form-control custom-input" placeholder="e.g. Pearl White">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Chassis Number</label>
+                            <input type="text" id="vChassis" class="form-control custom-input" placeholder="Chassis No">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="custom-label">Engine Number</label>
+                            <input type="text" id="vEngine" class="form-control custom-input" placeholder="Engine No">
+                        </div>
                     </div>
+
                     <div class="mt-4 text-end">
-                        <button type="submit" class="btn btn-primary-custom w-100">Save Vehicle</button>
+                        <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold" id="saveBtn">Save Vehicle</button>
                     </div>
                 </form>
             </div>

@@ -2,6 +2,14 @@ const SERVICE_BASE_URL = "http://localhost:8080/api/v1/service";
 const CATEGORY_BASE_URL = "http://localhost:8080/api/v1/service-category";
 let availableServicesList = [];
 
+function getAuthHeader() {
+    const token = localStorage.getItem("jwtToken");
+    return {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
 
     await loadCustomerCategoryDropdown();
@@ -30,7 +38,6 @@ function updatePageTitle(categoryCode) {
     }
 }
 
-
 function onCategoryFilterChange() {
     const selectedCat = document.getElementById('custCategoryFilterSelect').value;
     updatePageTitle(selectedCat);
@@ -41,17 +48,21 @@ async function loadCustomerCategoryDropdown() {
     try {
         const res = await fetch(`${CATEGORY_BASE_URL}/get-all`, { headers: getAuthHeader() });
         if (res.ok) {
-            const data = await res.json();
-            const categories = data.data || [];
+            const responseData = await res.json();
+
+            const categories = responseData.body || responseData.data || [];
             const select = document.getElementById('custCategoryFilterSelect');
 
             categories.forEach(c => {
-                if(c.status === "ACTIVE") {
+
+                if (!c.dataStatus || c.dataStatus === "ACTIVE") {
                     select.innerHTML += `<option value="${c.categoryCode}">${c.categoryName}</option>`;
                 }
             });
         }
-    } catch (err) { console.error("Error loading categories:", err); }
+    } catch (err) {
+        console.error("Error loading categories:", err);
+    }
 }
 
 async function fetchAllActiveServices() {
@@ -59,10 +70,17 @@ async function fetchAllActiveServices() {
         const res = await fetch(`${SERVICE_BASE_URL}/get-all`, { headers: getAuthHeader() });
         if (res.ok) {
             const responseData = await res.json();
-            availableServicesList = responseData.data || [];
+
+            availableServicesList = responseData.body || responseData.data || [];
             renderServicesGrid(availableServicesList);
+        } else {
+            console.error("Failed to fetch active services. Status:", res.status);
+            renderServicesGrid([]);
         }
-    } catch (err) { console.error("Error fetching services:", err); }
+    } catch (err) {
+        console.error("Error fetching services:", err);
+        renderServicesGrid([]);
+    }
 }
 
 async function fetchServicesByCategory(categoryCode) {
@@ -74,10 +92,16 @@ async function fetchServicesByCategory(categoryCode) {
         const res = await fetch(`${SERVICE_BASE_URL}/get-by-category/${categoryCode}`, { headers: getAuthHeader() });
         if (res.ok) {
             const responseData = await res.json();
-            availableServicesList = responseData.data || [];
+            availableServicesList = responseData.body || responseData.data || [];
             renderServicesGrid(availableServicesList);
+        } else {
+            console.error("Failed to fetch category services. Status:", res.status);
+            renderServicesGrid([]);
         }
-    } catch (err) { console.error("Error fetching category services:", err); }
+    } catch (err) {
+        console.error("Error fetching category services:", err);
+        renderServicesGrid([]);
+    }
 }
 
 function renderServicesGrid(services) {
@@ -119,8 +143,9 @@ function renderServicesGrid(services) {
 function filterCustomerServices() {
     const query = document.getElementById('custSearchInput').value.toLowerCase();
     const filtered = availableServicesList.filter(s =>
-        s.serviceName.toLowerCase().includes(query) ||
-        (s.description && s.description.toLowerCase().includes(query))
+        (s.serviceName && s.serviceName.toLowerCase().includes(query)) ||
+        (s.description && s.description.toLowerCase().includes(query)) ||
+        (s.serviceCode && s.serviceCode.toLowerCase().includes(query))
     );
     renderServicesGrid(filtered);
 }

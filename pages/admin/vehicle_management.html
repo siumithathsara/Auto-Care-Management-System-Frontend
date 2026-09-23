@@ -86,7 +86,8 @@
 </div>
 
 <!-- Vehicle Modal -->
-<div class="modal fade" id="vehicleModal" tabindex="-1" aria-hidden="true">
+<!-- Vehicle Modal -->
+<div class="modal fade" id="vehicleModal" tabindex="-1" >
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content custom-modal">
             <div class="modal-header">
@@ -101,7 +102,7 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="custom-label">License Plate *</label>
-                            <input type="text" id="vLicense" class="form-control custom-input" required>
+                            <input type="text" id="vLicense" class="form-control custom-input" required placeholder="e.g. CAB-1234">
                         </div>
                         <div class="col-md-4">
                             <label class="custom-label">Customer User Code *</label>
@@ -109,36 +110,35 @@
                         </div>
                         <div class="col-md-4">
                             <label class="custom-label">Manufacture Year</label>
-                            <input type="number" id="vYear" class="form-control custom-input" min="1900" max="2026">
+                            <input type="number" id="vYear" class="form-control custom-input" min="1900" max="2026" placeholder="2020">
                         </div>
                         <div class="col-md-6">
                             <label class="custom-label">Brand *</label>
-                            <input type="text" id="vBrand" class="form-control custom-input" required>
+                            <input type="text" id="vBrand" class="form-control custom-input" required placeholder="Toyota">
                         </div>
                         <div class="col-md-6">
                             <label class="custom-label">Model *</label>
-                            <input type="text" id="vModel" class="form-control custom-input" required>
+                            <input type="text" id="vModel" class="form-control custom-input" required placeholder="Corolla">
                         </div>
                         <div class="col-md-6">
                             <label class="custom-label">Fuel Type *</label>
                             <select id="vFuel" class="form-select custom-input" required>
-                                <option value="PETROL">Petrol</option>
-                                <option value="DIESEL">Diesel</option>
-                                <option value="HYBRID">Hybrid</option>
-                                <option value="ELECTRIC">Electric</option>
+                                <option value="PETROL">PETROL</option>
+                                <option value="DIESEL">DIESEL</option>
+                                <option value="HYBRID">HYBRID</option>
+                                <option value="ELECTRIC">ELECTRIC</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="custom-label">Transmission *</label>
                             <select id="vTrans" class="form-select custom-input" required>
-                                <option value="AUTO">Auto</option>
-                                <option value="MANUAL">Manual</option>
-                                <option value="CVT">CVT</option>
+                                <option value="AUTO">AUTO</option>
+                                <option value="MANUAL">MANUAL</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="custom-label">Color</label>
-                            <input type="text" id="vColor" class="form-control custom-input">
+                            <input type="text" id="vColor" class="form-control custom-input" placeholder="Black">
                         </div>
                         <div class="col-md-4">
                             <label class="custom-label">Chassis No</label>
@@ -150,6 +150,7 @@
                         </div>
                     </div>
                     <div class="mt-4 text-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary-custom">Save Vehicle</button>
                     </div>
                 </form>

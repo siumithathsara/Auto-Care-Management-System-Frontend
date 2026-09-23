@@ -276,3 +276,13 @@ body.um-app {
 .fs-8 { font-size: 0.72rem; }
 .text-indigo { color: var(--indigo-primary); }
 .text-emerald { color: var(--emerald); }
+
+table tbody tr td,
+.table tbody tr td {
+    color: #e2e8f0 !important;
+}
+.user-code-col,
+.nic-col,
+.contact-sub-text {
+    color: #94a3b8 !important;
+}

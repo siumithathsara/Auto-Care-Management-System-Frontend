@@ -4,7 +4,11 @@ let profileModalInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize Profile Modal
-    profileModalInstance = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    const modalEl = document.getElementById('userProfileModal');
+    if (modalEl) {
+        profileModalInstance = new bootstrap.Modal(modalEl);
+    }
+
     loadDashboardData();
 });
 
@@ -15,164 +19,207 @@ function getAuthHeaders() {
     };
 }
 
-// Fetch Backend Data (AdminDashboardDTO / AdvisorDashboardDTO)
 async function loadDashboardData() {
-    const role = localStorage.getItem("userRole") || "ADMIN"; // Default ADMIN
-    document.getElementById("loggedUserRole").innerText = role;
+    const role = (localStorage.getItem("userRole") || "ADMIN").toUpperCase();
 
-    const endpoint = (role === "ADMIN") ? `${DASHBOARD_API}/admin` : `${DASHBOARD_API}/advisor`;
+    const userNameElement = document.getElementById("loggedUserName");
+    if (userNameElement) {
+        userNameElement.innerText = localStorage.getItem("username") || "System User";
+    }
+
+    const roleBadgeElement = document.getElementById("loggedUserRole");
+    if (roleBadgeElement) {
+        roleBadgeElement.innerText = role;
+    }
+
+    const isAdmin = role.includes("ADMIN");
+    const endpoint = isAdmin ? `${DASHBOARD_API}/admin` : `${DASHBOARD_API}/advisor`;
+
+    console.log("Current Logged Role:", role);
+    console.log("Calling Endpoint:", endpoint);
 
     try {
-        /* Real Backend Fetch (Uncomment once connected)
         const res = await fetch(endpoint, {
             method: "GET",
             headers: getAuthHeaders()
         });
-        const result = await res.json();
 
-        if (res.ok && result.data) {
-            populateDashboardView(result.data, role);
+        console.log("Backend Response Status:", res.status);
+
+        if (res.ok) {
+            const result = await res.json();
+            console.log("Dashboard Data Response Received:", result);
+
+            const actualData = result.body || result.data || result;
+
+            if (actualData) {
+                populateDashboardView(actualData, role);
+            } else {
+                console.warn("Response body/data is empty.");
+            }
+        } else {
+            const errorText = await res.text();
+            console.error(`Failed to load dashboard data (${res.status}):`, errorText);
         }
-        */
-
-        // Simulated Mock Data matching Spring Boot Backend
-        setTimeout(() => {
-            const mockAdminDTO = {
-                todayRevenue: 45000.00,
-                thisMonthRevenue: 680000.00,
-                totalRevenue: 3450000.00,
-                pendingInvoicesCount: 4,
-                totalUnpaidAmount: 85000.00,
-                lowStockCount: 3,
-                outOfStockCount: 1,
-                overview: {
-                    activeJobCards: 8,
-                    completedJobCards: 42,
-                    vehiclesInWorkshop: 11
-                }
-            };
-            populateDashboardView(mockAdminDTO, role);
-        }, 300);
 
     } catch (err) {
-        console.error("Error loading dashboard data:", err);
+        console.error("Error connecting with backend dashboard API:", err);
     }
 }
 
-// Map Spring Boot DTO Data to Dashboard UI
 function populateDashboardView(data, role) {
-    // Shared Overview Items
-    const overview = data.overview || {};
-    document.getElementById("kpiActiveJobs").innerText = overview.activeJobCards || 0;
-    document.getElementById("kpiCompletedJobs").innerText = overview.completedJobCards || 0;
-    document.getElementById("kpiInWorkshop").innerText = overview.vehiclesInWorkshop || 0;
+    console.log("Populating Dashboard UI with data:", data);
 
-    // Financial & Stock Metrics (Admin Only)
-    if (role === "ADMIN") {
-        document.getElementById("adminMetricsRow").classList.remove("d-none");
-        document.getElementById("kpiTodayRevenue").innerText = `LKR ${(data.todayRevenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        document.getElementById("metricMonthRevenue").innerText = `LKR ${(data.thisMonthRevenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        document.getElementById("metricTotalRevenue").innerText = `LKR ${(data.totalRevenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        document.getElementById("metricPendingInvoices").innerText = data.pendingInvoicesCount || 0;
-        document.getElementById("metricUnpaidAmount").innerText = `LKR ${(data.totalUnpaidAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    const overview = data.overview || data;
 
-        document.getElementById("stockLowCount").innerText = data.lowStockCount || 0;
-        document.getElementById("stockOutCount").innerText = data.outOfStockCount || 0;
+    const kpiActiveJobs = document.getElementById("kpiActiveJobs");
+    const kpiCompletedJobs = document.getElementById("kpiCompletedJobs");
+    const kpiInWorkshop = document.getElementById("kpiInWorkshop");
+
+    if (kpiActiveJobs) kpiActiveJobs.innerText = overview.activeJobCards ?? data.activeJobCards ?? 0;
+    if (kpiCompletedJobs) kpiCompletedJobs.innerText = overview.completedJobCards ?? data.completedJobCards ?? 0;
+    if (kpiInWorkshop) kpiInWorkshop.innerText = overview.vehiclesInWorkshop ?? data.vehiclesInWorkshop ?? 0;
+
+    const todayRevenueCard = document.getElementById("todayRevenueCard");
+    const adminMetricsRow = document.getElementById("adminMetricsRow");
+    const stockInventorySection = document.getElementById("stockInventorySection");
+
+    const isAdminRole = (role || "").toUpperCase().includes("ADMIN");
+
+    if (isAdminRole) {
+
+        if (todayRevenueCard) todayRevenueCard.style.display = "block";
+        if (adminMetricsRow) {
+            adminMetricsRow.classList.remove("d-none");
+            adminMetricsRow.style.display = "flex";
+        }
+        if (stockInventorySection) stockInventorySection.style.display = "block";
+
+        const kpiTodayRevenue = document.getElementById("kpiTodayRevenue");
+        const metricMonthRevenue = document.getElementById("metricMonthRevenue");
+        const metricTotalRevenue = document.getElementById("metricTotalRevenue");
+        const metricPendingInvoices = document.getElementById("metricPendingInvoices");
+        const metricUnpaidAmount = document.getElementById("metricUnpaidAmount");
+        const stockLowCount = document.getElementById("stockLowCount");
+        const stockOutCount = document.getElementById("stockOutCount");
+
+        if (kpiTodayRevenue) kpiTodayRevenue.innerText = `LKR ${(data.todayRevenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        if (metricMonthRevenue) metricMonthRevenue.innerText = `LKR ${(data.thisMonthRevenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        if (metricTotalRevenue) metricTotalRevenue.innerText = `LKR ${(data.totalRevenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        if (metricPendingInvoices) metricPendingInvoices.innerText = data.pendingInvoicesCount || 0;
+        if (metricUnpaidAmount) metricUnpaidAmount.innerText = `LKR ${(data.totalUnpaidAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+        if (stockLowCount) stockLowCount.innerText = data.lowStockCount || 0;
+        if (stockOutCount) stockOutCount.innerText = data.outOfStockCount || 0;
     } else {
-        // Hide Financial Metrics for Service Advisor
-        document.getElementById("adminMetricsRow").classList.add("d-none");
-        document.getElementById("kpiTodayRevenue").innerText = "N/A";
+
+        if (todayRevenueCard) todayRevenueCard.style.display = "none";
+        if (adminMetricsRow) {
+            adminMetricsRow.classList.add("d-none");
+            adminMetricsRow.style.display = "none";
+        }
+        if (stockInventorySection) stockInventorySection.style.display = "none";
     }
 }
 
-// Settings Gear Click -> Navigate to User Management
 function openUserManagement() {
     switchTab('user-management');
 }
 
-// Open User Profile Popup Modal
 function openProfileModal() {
-    document.getElementById("modalUserName").innerText = "Kasun Perera";
-    document.getElementById("modalUserRole").innerText = localStorage.getItem("userRole") || "ADMIN";
-    document.getElementById("modalUserCode").innerText = "USR-2026-001";
-    document.getElementById("modalUserEmail").innerText = "admin@autocare.lk";
-    document.getElementById("modalUserPhone").innerText = "+94 77 123 4567";
-    document.getElementById("modalUserNic").innerText = "199512345678";
-    document.getElementById("modalUserAddress").innerText = "Colombo, Sri Lanka";
+    const username = localStorage.getItem("username") || "System User";
+    const role = localStorage.getItem("userRole") || "ADMIN";
 
-    profileModalInstance.show();
+    const modalUserName = document.getElementById("modalUserName");
+    const modalUserRole = document.getElementById("modalUserRole");
+
+    if (modalUserName) modalUserName.innerText = username;
+    if (modalUserRole) modalUserRole.innerText = role;
+
+    if (profileModalInstance) {
+        profileModalInstance.show();
+    }
 }
-
-// Dynamic Sidebar Tab Switcher
 function switchTab(moduleName, event) {
     if (event) event.preventDefault();
 
+    // Active Highlight Toggle
     document.querySelectorAll(".sidebar-menu a").forEach(el => el.classList.remove("active"));
-
     if (event && event.currentTarget) {
         event.currentTarget.classList.add("active");
     }
 
-    const mainContainer = document.getElementById("dashboardMainContainer");
+    const kpiOverviewRow = document.getElementById("kpiOverviewRow");
+    const adminMetricsRow = document.getElementById("adminMetricsRow");
     const dynamicContent = document.getElementById("dynamicPageContent");
+    const iframe = document.getElementById("adminPageIframe");
 
     if (moduleName === "dashboard") {
-        mainContainer.children[0].classList.remove("d-none");
-        mainContainer.children[1].classList.remove("d-none");
-        dynamicContent.classList.add("d-none");
+        if (kpiOverviewRow) kpiOverviewRow.classList.remove("d-none");
+        if (adminMetricsRow) adminMetricsRow.classList.remove("d-none");
+        if (dynamicContent) dynamicContent.classList.add("d-none");
     } else {
-        mainContainer.children[0].classList.add("d-none");
-        mainContainer.children[1].classList.add("d-none");
-        dynamicContent.classList.remove("d-none");
+        if (kpiOverviewRow) kpiOverviewRow.classList.add("d-none");
+        if (adminMetricsRow) adminMetricsRow.classList.add("d-none");
+        if (dynamicContent) dynamicContent.classList.remove("d-none");
 
-        const titleMap = {
-            'job-cards': 'Job Cards Management',
-            'job-sections': 'Job Sections',
-            'vehicle-services': 'Vehicle Services',
-            'service-categories': 'Service Categories',
-            'vehicles': 'Vehicle Management',
-            'appointments': 'Appointments Management',
-            'spare-parts': 'Spare Parts Inventory',
-            'purchase-orders': 'Purchase Orders',
-            'suppliers': 'Supplier Management',
-            'payments': 'Payments & Invoicing',
-            'employees': 'Employee Management',
-            'user-management': 'User Management & Settings'
+        const pageMap = {
+            'job-cards': 'job-card-manage.html',
+            'job-sections': 'job-section-manage.html',
+            'vehicle-services': 'vehicle-service-manage.html',
+            'service-categories': 'service-category-manage.html',
+            'vehicles': 'vehicle_management.html',
+            'appointments': 'appointment-manage.html',
+            'spare-parts': 'spare-part-manage.html',
+            'purchase-orders': 'purchase-order.html',
+            'suppliers': 'supplier-manage.html',
+            'payments': 'invoice-manage.html',
+            'employees': 'employee-manage.html',
+            'user-management': 'user_management.html'
         };
 
-        document.getElementById("pageTitle").innerText = titleMap[moduleName] || moduleName.toUpperCase();
-        document.getElementById("pageDescription").innerText = `Manage all ${titleMap[moduleName] || moduleName} operations from this page.`;
+        if (iframe && pageMap[moduleName]) {
+            iframe.src = pageMap[moduleName];
+        }
     }
 }
 
-// Mobile Responsive Sidebar Toggle
 function toggleSidebar() {
-    document.querySelector(".sidebar").classList.toggle("show");
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) sidebar.classList.toggle("show");
 }
 
-// Logout Confirmation
+
 function handleLogout() {
     if (confirm("Are you sure you want to log out?")) {
         localStorage.clear();
-        window.location.href = "/login.html";
+        window.location.href = "../../index.html";
     }
 }
 
-/* Floating AI Chatbot Logic */
+/* ==========================================================
+   AI BOT CHAT COMPONENT LOGIC
+   ========================================================== */
+
 function toggleAiChat() {
     const chatWin = document.getElementById("aiChatWindow");
-    chatWin.style.display = (chatWin.style.display === "flex") ? "none" : "flex";
+    if (chatWin) {
+        chatWin.style.display = (chatWin.style.display === "flex") ? "none" : "flex";
+    }
 }
 
 function handleAiKeyPress(e) {
-    if (e.key === 'Enter') sendAiMessage();
+    if (e.key === 'Enter') {
+        sendAiMessage();
+    }
 }
 
 function sendAiMessage() {
     const input = document.getElementById("aiInputMsg");
     const body = document.getElementById("aiChatBody");
-    const msg = input.value.trim();
+    if (!input || !body) return;
 
+    const msg = input.value.trim();
     if (!msg) return;
 
     body.innerHTML += `<div class="chat-msg user">${msg}</div>`;
@@ -180,7 +227,7 @@ function sendAiMessage() {
     body.scrollTop = body.scrollHeight;
 
     setTimeout(() => {
-        body.innerHTML += `<div class="chat-msg bot">Processing your query regarding: "${msg}"...</div>`;
+        body.innerHTML += `<div class="chat-msg bot">Processing your query regarding: "${msg}"... (AI Backend integration pending)</div>`;
         body.scrollTop = body.scrollHeight;
     }, 600);
 }

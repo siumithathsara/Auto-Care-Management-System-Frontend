@@ -429,3 +429,14 @@ body {
         left: 0;
     }
 }
+.glass-card .text-muted.fs-8,
+.glass-card span.text-muted,
+.glass-card p.text-muted {
+    color: #a0aec0 !important;
+    font-weight: 500 !important;
+}
+
+.glass-card .fs-8 {
+    font-size: 0.85rem !important;
+    color: #cbd5e1 !important;
+}
